@@ -13,10 +13,7 @@ export default function Dashboard() {
   const completedCount = progress.completedLessons.length
   const globalPct = Math.round((completedCount / totalLessons) * 100)
 
-  const lastLesson = allLessons.find(l => l.id === progress.lastSeenLesson)
-  const lastModule = lastLesson
-    ? modules.find(m => m.chapters.some(c => c.lessons.some(l => l.id === lastLesson.id)))
-    : null
+
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -49,18 +46,7 @@ export default function Dashboard() {
         }).length} />
       </div>
 
-      {lastLesson && lastModule && (
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-[var(--color-success)]/25 bg-[var(--color-success-bg)] p-4">
-          <div>
-            <div className="mb-0.5 text-[var(--text-xs)] font-medium text-[var(--color-success)]">Reprendre où tu t'étais arrêté</div>
-            <div className="text-[var(--text-sm)] font-medium text-[var(--color-text)]">{lastLesson.title}</div>
-            <div className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">{lastModule.title}</div>
-          </div>
-          <button onClick={() => navigate('/modules')} className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-[var(--text-xs)] text-white transition-colors hover:opacity-95">
-            Reprendre →
-          </button>
-        </div>
-      )}
+
 
       <div>
         <h2 className="mb-3 text-[var(--text-sm)] font-medium text-[var(--color-text)]">Progression par module</h2>

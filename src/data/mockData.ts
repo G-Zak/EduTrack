@@ -1,8 +1,8 @@
 import type { Module, UserProfile } from '../types'
 
 export const profile: UserProfile = {
-  name: "Yassine Benali",
-  initials: "YB",
+  name: "Abdessamad Abounouh",
+  initials: "AA",
   track: "Développement Web Full-Stack",
   startDate: "2024-09-01",
 }
