@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/docs/*.md
+/docs/*.txt
+/docs/TAIGA_TASKS_FULL.md
+/docs/EXECUTIVE_SUMMARY.md
+/docs/README_UPDATED.md
+/docs/TAIGA_READY.txt
+.vscode/
+/docs
+/documentation
+

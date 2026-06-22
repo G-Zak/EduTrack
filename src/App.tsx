@@ -3,6 +3,11 @@ import Sidebar from './components/shared/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import Profil from './pages/Profil'
+import GradesPage from './pages/GradesPage'
+import AbsencesPage from './pages/AbsencesPage'
+import TasksPage from './pages/TasksPage'
+import FeedbackPage from './pages/FeedbackPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import { profile } from './data/mockData'
 
 export default function App() {
@@ -32,6 +37,11 @@ export default function App() {
         <main className="flex-1 p-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/notes" element={<GradesPage />} />
+            <Route path="/absences" element={<AbsencesPage />} />
+            <Route path="/taches" element={<TasksPage />} />
+            <Route path="/avis" element={<FeedbackPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/modules" element={<Modules />} />
             <Route path="/profil" element={<Profil />} />
           </Routes>
