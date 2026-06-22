@@ -1,134 +1,135 @@
-# Backlog Taiga : Statistiques & Tableau de bord (Performances & Absences)
+# Backlog Taiga : Statistiques centrées Élève (Performances, Implication & Absences)
 
-Ci-dessous les user stories, tâches, critères d'acceptation et estimations suggérées à copier dans Taiga.
-
----
-
-## Épic : Statistiques étudiantes & Tableau de bord
-Objectif : Fournir des rapports et visualisations des performances et des absences pour les élèves, enseignants et administrateurs.
+Le focus principal : l'application est centrée sur l'élève. L'objectif est de lui permettre de suivre sa progression, sa motivation et son implication dans un cours à partir des évaluations fournies par les enseignants.
 
 ---
 
-### User Story 1 : Consulter mon tableau de bord de performance
-- En tant qu'élève, je veux voir ma moyenne actuelle, le détail par matière et la tendance pour suivre ma progression.
+## Épic : Tableau de bord Élève — Suivi de progression
+Objectif : Permettre à chaque étudiant de visualiser son évolution par matière, son niveau d'implication (présence, remises de devoirs) et sa motivation (tendances de performance), afin de s'auto-orienter.
+
+---
+
+### User Story 1 : Voir mon tableau de bord personnel
+- En tant qu'élève, je veux consulter ma moyenne actuelle, le détail par matière, ma progression et des indicateurs d'implication pour suivre mon évolution.
+- Priorité : Très élevée
+- Estimation : 5
+
+Tâches :
+- Produire données mock centrées élève (notes, remises, présences, activité)
+- Implémenter computeStudentAverage et computeEngagementScore (service)
+- Implémenter useStudentStats (hook) combinant performance + implication
+- Composants UI : StudentPerformanceCard, EngagementKPI, ProgressTrendChart
+- Route : /statistics/me
+
+Critères d'acceptation :
+- L'élève voit sa moyenne par matière, un score d'implication (ex: % devoirs remis) et un graphique de tendance
+- Données par défaut via mockAdapter
+- Tests unitaires pour computeStudentAverage et computeEngagementScore
+
+---
+
+### User Story 2 : Feedback actionnable
+- En tant qu'élève, je veux des recommandations simples (p.ex. "Travailler les mathématiques — revoir chap.3") et des objectifs à court terme pour m'améliorer.
 - Priorité : Élevée
 - Estimation : 5
 
 Tâches :
-- Créer des données mock pour un élève exemple
-- Implémenter le service computeStudentAverage
-- Implémenter le hook useStudentStats
-- Construire le composant StudentPerformanceCard (UI)
-- Construire le PerformanceChart (Recharts)
-- Ajouter la route /statistics/me et le container
+- Définir règles basiques de recommandation (seuils de moyenne, chute de tendance, absentéisme)
+- Implémenter service generateRecommendations(stats)
+- UI : RecommendationsCard avec actions (marquer "Déjà fait", créer rappel)
 
 Critères d'acceptation :
-- L'élève peut ouvrir /statistics/me et voir la moyenne, la liste des matières et un graphique de tendance
-- Les données proviennent de l'adapter mock
-- Tests unitaires couvrent computeStudentAverage
+- Au moins 3 types de recommandations générées automatiquement
+- L'utilisateur peut marquer une recommandation comme accomplie
 
 ---
 
-### User Story 2 : Consulter les statistiques de la classe
-- En tant qu'enseignant, je veux voir la moyenne de la classe, les meilleurs/moins bons élèves et la distribution des notes.
+### User Story 3 : Suivi de l'implication (présences & devoirs)
+- En tant qu'élève, je veux voir mon taux de présence et mon historique de remises (délais) pour mesurer mon engagement.
 - Priorité : Élevée
-- Estimation : 8
+- Estimation : 4
 
 Tâches :
-- Implémenter fetchClassGrades dans l'adapter
-- Implémenter computeClassAverage et gradeDistribution
-- Construire le container ClassOverviewDashboard et ses composants (UI)
-- Ajouter filtres de classe et sélecteur de période
+- Modèle Absence + modèle Submission (devoirs remis avec date)
+- Implémenter aggregateAbsences et computeSubmissionRate
+- UI : AbsenceTimeline, SubmissionKPI
 
 Critères d'acceptation :
-- L'enseignant peut voir la moyenne de la classe et le top5 / bottom5
-- Le graphique de distribution affiche des buckets (A-F)
-- Le hook accepte une plage de dates
+- L'élève voit son taux d'absences et % de devoirs remis à temps
+- Filtres par période
 
 ---
 
-### User Story 3 : Suivre et rapporter les absences
-- En tant qu'enseignant/administrateur, je veux consulter l'historique des absences et les tendances par classe.
+### User Story 4 : Historique et tendances
+- En tant qu'élève, je veux consulter l'évolution (courbe) de mes notes et de mon implication pour détecter des améliorations ou baisses.
 - Priorité : Moyenne
-- Estimation : 5
+- Estimation : 4
 
 Tâches :
-- Créer le modèle Absence et des données mock
-- Implémenter fetchAbsences dans l'adapter
-- Implémenter aggregateAbsences dans les services
-- Construire AbsenceCard, AbsenceChart, AbsenceTable (UI)
+- Services pour générer séries temporelles (rolling average)
+- Graphiques interactifs (range selector)
 
 Critères d'acceptation :
-- Timeline des absences et KPI de synthèse visibles
-- Filtre possible par justifié / non justifié
+- Courbe de progression affichée et zoomable
 
 ---
 
-### User Story 4 : Abstraction d'adapter & implémentation mock
-- En tant que développeur, je veux une interface d'adapter unique pour pouvoir remplacer le backend facilement.
-- Priorité : Élevée
-- Estimation : 3
-
-Tâches :
-- Définir l'interface d'adapter (fetchGrades, fetchAbsences, fetchClassGrades, watch optionnel)
-- Implémenter mockAdapter (fichiers JSON + msw)
-- Documenter l'utilisation dans le README
-
-Critères d'acceptation :
-- Changer d'adapter ne nécessite que de modifier l'import au niveau du composition root
-- mockAdapter renvoie des données réalistes
-
----
-
-### User Story 5 : Tests unitaires pour les services
-- En tant que développeur, je veux des tests unitaires pour assurer la fiabilité des calculs.
-- Priorité : Élevée
-- Estimation : 3
-
-Tâches :
-- Ajouter des tests pour computeStudentAverage, computeClassAverage, gradeDistribution, detectTrend
-- Configurer le runner de tests (Vitest/Jest)
-
-Critères d'acceptation :
-- Les services ont des tests avec couverture raisonnable (>80% branches recommandées)
-
----
-
-### User Story 6 : Graphiques & export
-- En tant qu'enseignant, je veux exporter les rapports de performance et d'absences au format CSV.
-- Priorité : Moyenne
-- Estimation : 5
-
-Tâches :
-- Ajouter une utilité d'export CSV dans les services
-- Ajouter un bouton Export sur les tableaux de bord
-- Implémenter la génération et le téléchargement CSV côté client
-
-Critères d'acceptation :
-- Le CSV exporté contient les colonnes et lignes attendues selon les filtres
-
----
-
-### User Story 7 : Contrôle d'accès par rôle (côté front)
-- En tant qu'administrateur, je veux que les vues soient restreintes selon le rôle utilisateur.
+### User Story 5 : Confidentialité et contrôle
+- En tant qu'élève, je veux contrôler qui voit mes données (par défaut privé), et pouvoir anonymiser certaines informations.
 - Priorité : Moyenne
 - Estimation : 3
 
 Tâches :
-- Ajouter vérifications de rôle dans les containers de route
-- Masquer/afficher les éléments UI selon le rôle
+- Ajouter préférence privacy dans dashboard_settings
+- UI pour configurer visibilité (privé / partage avec prof)
 
 Critères d'acceptation :
-- Les élèves ne peuvent pas accéder aux tableaux de bord de classe
-- Les enseignants ne voient que leurs classes (imposé en mock pour l'instant)
+- Option de partage visible dans le dashboard
 
 ---
 
-## Labels et Tags
+### User Story 6 : Adapter & mock (infrastructure)
+- En tant que développeur, je veux une interface d'adapter stable pour changer la persistance sans impacter l'UI.
+- Priorité : Très élevée
+- Estimation : 3
+
+Tâches :
+- Définir interface adapter (fetchGrades, fetchAbsences, fetchSubmissions, fetchStudentActivity)
+- Implémenter mockAdapter (JSON + msw)
+- Documenter le contrat d'API côté frontend
+
+Critères d'acceptation :
+- Changer d'adapter nécessite une modification unique au composition root
+
+---
+
+### User Story 7 : Tests & qualité
+- En tant qu'équipe, nous voulons des tests pour les services et hooks afin d'assurer fiabilité et évolutivité.
+- Priorité : Élevée
+- Estimation : 4
+
+Tâches :
+- Tests unitaires pour computeStudentAverage, computeEngagementScore, generateRecommendations
+- Tests d'intégration hook + msw
+
+Critères d'acceptation :
+- Couverture raisonnable des services critiques
+
+---
+
+## Idées supplémentaires (phase 1)
+- Score d'engagement combinant présence, remises à l'heure et évolution des notes.
+- Badges motivants (p.ex. "Régulier", "Progression 10%") pour encourager l'étudiant.
+- Rappels locaux (notifications) pour devoirs à rendre.
+- Vue comparée anonymisée : voir la moyenne de la classe sans noms pour se situer.
+
+---
+
+## Labels recommandés
 - composant : adapter, service, hook, ui, tests, docs
-- priorité : élevée, moyenne, faible
+- priorité : tres-élevée, élevée, moyenne, faible
 
 ---
 
-## Importer dans Taiga
-Copier chaque user story dans Taiga sous l'épic "Statistiques étudiantes & Tableau de bord". Ajouter les tâches en sous-tâches et les estimations en points. Utiliser les labels pour taguer composant et priorité.
+## Import dans Taiga
+Copier chaque User Story en français dans Taiga sous l'épic "Tableau de bord Élève — Suivi de progression". Ajouter les tâches en sous-tâches et estimer en story points. Utiliser les labels pour tri et priorité.
