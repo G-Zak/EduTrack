@@ -1,134 +1,134 @@
-# Taiga Backlog: Statistics & Dashboard (Performances & Absences)
+# Backlog Taiga : Statistiques & Tableau de bord (Performances & Absences)
 
-Below are user stories, tasks, acceptance criteria, and suggested estimates to copy into Taiga.
-
----
-
-## Epic: Student Statistics & Dashboard
-Goal: Provide student and class performance insights and absence reporting for teachers, students, and admins.
+Ci-dessous les user stories, tâches, critères d'acceptation et estimations suggérées à copier dans Taiga.
 
 ---
 
-### User Story 1: View personal performance dashboard
-- As a student, I want to see my current average, subject breakdown, and performance trend so I can track progress.
-- Priority: High
-- Estimate: 5
-
-Tasks:
-- Create mock data for a sample student (Dev)
-- Implement computeStudentAverage service (Dev)
-- Implement useStudentStats hook (Dev)
-- Build StudentPerformanceCard component (UI)
-- Build PerformanceChart (Recharts)
-- Add route /statistics/me and container
-
-Acceptance Criteria:
-- Student can open /statistics/me and see current average, subject list, and a trend chart
-- Data uses mock adapter
-- Unit tests cover computeStudentAverage
+## Épic : Statistiques étudiantes & Tableau de bord
+Objectif : Fournir des rapports et visualisations des performances et des absences pour les élèves, enseignants et administrateurs.
 
 ---
 
-### User Story 2: View class-level statistics
-- As a teacher, I want to view class averages, top/bottom performers, and grade distribution.
-- Priority: High
-- Estimate: 8
+### User Story 1 : Consulter mon tableau de bord de performance
+- En tant qu'élève, je veux voir ma moyenne actuelle, le détail par matière et la tendance pour suivre ma progression.
+- Priorité : Élevée
+- Estimation : 5
 
-Tasks:
-- Implement fetchClassGrades in adapter (Dev)
-- Implement computeClassAverage and gradeDistribution services (Dev)
-- Build ClassOverviewDashboard container & components (UI)
-- Add class filters and date-range selector
+Tâches :
+- Créer des données mock pour un élève exemple
+- Implémenter le service computeStudentAverage
+- Implémenter le hook useStudentStats
+- Construire le composant StudentPerformanceCard (UI)
+- Construire le PerformanceChart (Recharts)
+- Ajouter la route /statistics/me et le container
 
-Acceptance Criteria:
-- Teacher can view class average and a list of top 5 and bottom 5 students
-- Grade distribution chart displays buckets (A-F)
-- Hook supports date range
-
----
-
-### User Story 3: Track and report absences
-- As a teacher/admin, I want to see student absence history and class absence patterns.
-- Priority: Medium
-- Estimate: 5
-
-Tasks:
-- Create Absence model & mock data
-- Implement fetchAbsences adapter method (Dev)
-- Implement aggregateAbsences service (Dev)
-- Build AbsenceCard, AbsenceChart, AbsenceTable components (UI)
-
-Acceptance Criteria:
-- Absence timeline and summary KPIs are visible
-- Can filter by justified/unjustified
+Critères d'acceptation :
+- L'élève peut ouvrir /statistics/me et voir la moyenne, la liste des matières et un graphique de tendance
+- Les données proviennent de l'adapter mock
+- Tests unitaires couvrent computeStudentAverage
 
 ---
 
-### User Story 4: Adapter abstraction & mock implementation
-- As a developer, I want a single adapter interface so backends can be swapped easily.
-- Priority: High
-- Estimate: 3
+### User Story 2 : Consulter les statistiques de la classe
+- En tant qu'enseignant, je veux voir la moyenne de la classe, les meilleurs/moins bons élèves et la distribution des notes.
+- Priorité : Élevée
+- Estimation : 8
 
-Tasks:
-- Define adapter interface (fetchGrades, fetchAbsences, fetchClassGrades, optional watch)
-- Implement mockAdapter using JSON files and msw for dev
-- Document adapter usage in README
+Tâches :
+- Implémenter fetchClassGrades dans l'adapter
+- Implémenter computeClassAverage et gradeDistribution
+- Construire le container ClassOverviewDashboard et ses composants (UI)
+- Ajouter filtres de classe et sélecteur de période
 
-Acceptance Criteria:
-- Switching adapter requires changing only the composition root import
-- mockAdapter returns realistic sample data
-
----
-
-### User Story 5: Unit tests for services
-- As a developer, I want services to be unit tested to ensure correctness.
-- Priority: High
-- Estimate: 3
-
-Tasks:
-- Add tests for computeStudentAverage, computeClassAverage, gradeDistribution, detectTrend
-- Configure test runner (Vitest/Jest)
-
-Acceptance Criteria:
-- Services have tests with >80% branch coverage
+Critères d'acceptation :
+- L'enseignant peut voir la moyenne de la classe et le top5 / bottom5
+- Le graphique de distribution affiche des buckets (A-F)
+- Le hook accepte une plage de dates
 
 ---
 
-### User Story 6: Charts & export
-- As a teacher, I want to export performance and absence reports as CSV.
-- Priority: Medium
-- Estimate: 5
+### User Story 3 : Suivre et rapporter les absences
+- En tant qu'enseignant/administrateur, je veux consulter l'historique des absences et les tendances par classe.
+- Priorité : Moyenne
+- Estimation : 5
 
-Tasks:
-- Add CSV export utility in services
-- Add Export button to dashboards
-- Implement client-side CSV generation and download
+Tâches :
+- Créer le modèle Absence et des données mock
+- Implémenter fetchAbsences dans l'adapter
+- Implémenter aggregateAbsences dans les services
+- Construire AbsenceCard, AbsenceChart, AbsenceTable (UI)
 
-Acceptance Criteria:
-- Exported CSV contains the expected columns and rows matching filters
-
----
-
-### User Story 7: Role-based access (frontend gating)
-- As an admin, I want role-based views so users see only allowed data.
-- Priority: Medium
-- Estimate: 3
-
-Tasks:
-- Add role checks in route containers
-- Show/hide UI elements appropriately
-
-Acceptance Criteria:
-- Students cannot access class-level dashboards
-- Teachers can access their classes only (mock enforcement)
+Critères d'acceptation :
+- Timeline des absences et KPI de synthèse visibles
+- Filtre possible par justifié / non justifié
 
 ---
 
-## Labels and Tags
-- component: adapter, service, hook, ui, tests, docs
-- priority: high, medium, low
+### User Story 4 : Abstraction d'adapter & implémentation mock
+- En tant que développeur, je veux une interface d'adapter unique pour pouvoir remplacer le backend facilement.
+- Priorité : Élevée
+- Estimation : 3
+
+Tâches :
+- Définir l'interface d'adapter (fetchGrades, fetchAbsences, fetchClassGrades, watch optionnel)
+- Implémenter mockAdapter (fichiers JSON + msw)
+- Documenter l'utilisation dans le README
+
+Critères d'acceptation :
+- Changer d'adapter ne nécessite que de modifier l'import au niveau du composition root
+- mockAdapter renvoie des données réalistes
 
 ---
 
-## How to import
-Copy each User Story into Taiga as a User Story under the "Student Statistics & Dashboard" epic. Add tasks as sub-tasks and estimates as story points. Use labels to tag component and priority.
+### User Story 5 : Tests unitaires pour les services
+- En tant que développeur, je veux des tests unitaires pour assurer la fiabilité des calculs.
+- Priorité : Élevée
+- Estimation : 3
+
+Tâches :
+- Ajouter des tests pour computeStudentAverage, computeClassAverage, gradeDistribution, detectTrend
+- Configurer le runner de tests (Vitest/Jest)
+
+Critères d'acceptation :
+- Les services ont des tests avec couverture raisonnable (>80% branches recommandées)
+
+---
+
+### User Story 6 : Graphiques & export
+- En tant qu'enseignant, je veux exporter les rapports de performance et d'absences au format CSV.
+- Priorité : Moyenne
+- Estimation : 5
+
+Tâches :
+- Ajouter une utilité d'export CSV dans les services
+- Ajouter un bouton Export sur les tableaux de bord
+- Implémenter la génération et le téléchargement CSV côté client
+
+Critères d'acceptation :
+- Le CSV exporté contient les colonnes et lignes attendues selon les filtres
+
+---
+
+### User Story 7 : Contrôle d'accès par rôle (côté front)
+- En tant qu'administrateur, je veux que les vues soient restreintes selon le rôle utilisateur.
+- Priorité : Moyenne
+- Estimation : 3
+
+Tâches :
+- Ajouter vérifications de rôle dans les containers de route
+- Masquer/afficher les éléments UI selon le rôle
+
+Critères d'acceptation :
+- Les élèves ne peuvent pas accéder aux tableaux de bord de classe
+- Les enseignants ne voient que leurs classes (imposé en mock pour l'instant)
+
+---
+
+## Labels et Tags
+- composant : adapter, service, hook, ui, tests, docs
+- priorité : élevée, moyenne, faible
+
+---
+
+## Importer dans Taiga
+Copier chaque user story dans Taiga sous l'épic "Statistiques étudiantes & Tableau de bord". Ajouter les tâches en sous-tâches et les estimations en points. Utiliser les labels pour taguer composant et priorité.
