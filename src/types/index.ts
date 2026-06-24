@@ -39,12 +39,16 @@ export interface ProgressState {
 
 // ─── Academic Types ──────────────────────────────────────────────────────────
 
+export type SubjectType = 'academic' | 'personal'
+
 export interface Subject {
   id: string
   name: string
   color: string
-  coefficient: number
-  teacher: string
+  type: SubjectType
+  coefficient?: number    // only for academic subjects
+  teacher?: string        // only for academic subjects
+  isActive?: boolean
 }
 
 export interface Grade {

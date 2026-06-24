@@ -1,10 +1,10 @@
-import { NavLink } from 'react-router-dom'
-import { profile } from '../../data/mockData'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const links = [
   {
     to: '/',
-    label: 'Dashboard',
+    label: 'Tableau de bord',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -58,7 +58,25 @@ const links = [
   },
 ]
 
-const secondaryLinks = [
+const progressLinks = [
+  {
+    to: '/progression',
+    label: 'Progression',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/reflexion',
+    label: 'Réflexion',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+    ),
+  },
   {
     to: '/modules',
     label: 'Mes modules',
@@ -80,6 +98,12 @@ const secondaryLinks = [
 ]
 
 export default function Sidebar() {
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const displayName = user?.user_metadata?.name ?? user?.email ?? 'Étudiant'
+  const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-[220px] flex-shrink-0 flex-col border-r border-white/10 bg-[var(--color-primary)] text-white">
       {/* Brand */}
@@ -89,7 +113,7 @@ export default function Sidebar() {
       </div>
 
       {/* Main nav */}
-      <nav className="flex flex-1 flex-col gap-0.5 px-2 pt-3">
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pt-3">
         <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Académique</div>
         {links.map(({ to, label, icon }) => (
           <NavLink
@@ -109,8 +133,8 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        <div className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Apprentissage</div>
-        {secondaryLinks.map(({ to, label, icon }) => (
+        <div className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Développement</div>
+        {progressLinks.map(({ to, label, icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -132,12 +156,20 @@ export default function Sidebar() {
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-[var(--text-xs)] font-bold flex-shrink-0">
-            {profile.initials}
+            {initials}
           </div>
-          <div className="min-w-0">
-            <div className="truncate text-[var(--text-xs)] font-semibold text-white">{profile.name.split(' ')[0]}</div>
-            <div className="text-[10px] text-white/50">{profile.year}</div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[var(--text-xs)] font-semibold text-white">{displayName.split(' ')[0]}</div>
           </div>
+          <button
+            onClick={async () => { await signOut(); navigate('/login') }}
+            title="Déconnexion"
+            className="text-white/50 hover:text-white transition-colors ml-auto"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
