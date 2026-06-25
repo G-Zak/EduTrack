@@ -11,6 +11,9 @@ interface ProgressContextType {
   uncompleteLesson: (lessonId: string) => Promise<void>
   isCompleted: (lessonId: string) => boolean
   setLastSeen: (lessonId: string) => Promise<void>
+  completeChapter: (chapterId: string) => Promise<void>
+  uncompleteChapter: (chapterId: string) => Promise<void>
+  isChapterCompleted: (chapterId: string) => boolean
 }
 
 const ProgressContext = createContext<ProgressContextType | null>(null)
@@ -19,15 +22,17 @@ const STORAGE_KEY = 'student-tracker-progress'
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const { user, isConfigured } = useAuth()
-  const [progress, setProgress] = useState<ProgressState>({ completedLessons: [], lastSeenLesson: null })
+  const [progress, setProgress] = useState<ProgressState>({ completedLessons: [], completedChapters: [], lastSeenLesson: null })
 
   // Synchronize with user state or local storage
   useEffect(() => {
     if (isConfigured && user) {
       const dbCompleted = user.user_metadata?.completed_lessons ?? []
+      const dbChapters = user.user_metadata?.completed_chapters ?? []
       const dbLastSeen = user.user_metadata?.last_seen_lesson ?? null
       setProgress({
         completedLessons: Array.isArray(dbCompleted) ? dbCompleted : [],
+        completedChapters: Array.isArray(dbChapters) ? dbChapters : [],
         lastSeenLesson: dbLastSeen
       })
     } else {
@@ -35,7 +40,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (stored) {
         setProgress(JSON.parse(stored))
       } else {
-        setProgress({ completedLessons: [], lastSeenLesson: null })
+        setProgress({ completedLessons: [], completedChapters: [], lastSeenLesson: null })
       }
     }
   }, [user, isConfigured])
@@ -95,8 +100,42 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const completeChapter = async (id: string) => {
+    const nextCompleted = progress.completedChapters?.includes(id)
+      ? progress.completedChapters
+      : [...(progress.completedChapters ?? []), id]
+
+    setProgress(p => ({
+      ...p,
+      completedChapters: nextCompleted
+    }))
+
+    if (isConfigured && user) {
+      await supabase.auth.updateUser({
+        data: {
+          completed_chapters: nextCompleted
+        }
+      })
+    }
+  }
+
+  const uncompleteChapter = async (id: string) => {
+    const nextCompleted = (progress.completedChapters ?? []).filter(c => c !== id)
+    setProgress(p => ({ ...p, completedChapters: nextCompleted }))
+
+    if (isConfigured && user) {
+      await supabase.auth.updateUser({
+        data: {
+          completed_chapters: nextCompleted
+        }
+      })
+    }
+  }
+
+  const isChapterCompleted = (id: string) => progress.completedChapters?.includes(id) ?? false
+
   return (
-    <ProgressContext.Provider value={{ progress, completeLesson, uncompleteLesson, isCompleted, setLastSeen }}>
+    <ProgressContext.Provider value={{ progress, completeLesson, uncompleteLesson, isCompleted, setLastSeen, completeChapter, uncompleteChapter, isChapterCompleted }}>
       {children}
     </ProgressContext.Provider>
   )
