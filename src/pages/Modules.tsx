@@ -20,7 +20,8 @@ export default function Modules() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const subjectId = searchParams.get('subjectId')
-  const { chapters, updateChapter } = useChapters(subjectId ?? '')
+  const selectedSub = subjects.find(s => s.id === subjectId) ?? null
+  const { chapters, updateChapter } = useChapters(subjectId ?? '', selectedSub?.name)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
@@ -189,7 +190,7 @@ export default function Modules() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="mb-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">Mes matières</h1>
+      <h1 className="mb-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">Apprentissage</h1>
       <p className="mb-8 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Clique sur une matière pour voir ses chapitres et suivre ta progression.</p>
 
       {/* Global progress */}
