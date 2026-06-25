@@ -24,12 +24,12 @@ export const profile: UserProfile = {
 // ─── Subjects ────────────────────────────────────────────────────────────────
 
 export const subjects: Subject[] = [
-  { id: 's1', name: 'Algorithmes Avancés',    color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled' },
-  { id: 's2', name: 'Développement Web',       color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi' },
-  { id: 's3', name: 'Base de Données',         color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari' },
-  { id: 's4', name: 'Systèmes Distribués',     color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri' },
-  { id: 's5', name: 'Gestion de Projet',       color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali' },
-  { id: 's6', name: 'Sécurité Informatique',  color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri' },
+  { id: 's1', name: 'Algorithmes Avancés',    color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled', type: 'academic' },
+  { id: 's2', name: 'Développement Web',       color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi', type: 'academic' },
+  { id: 's3', name: 'Base de Données',         color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari', type: 'academic' },
+  { id: 's4', name: 'Systèmes Distribués',     color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri', type: 'academic' },
+  { id: 's5', name: 'Gestion de Projet',       color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali', type: 'academic' },
+  { id: 's6', name: 'Sécurité Informatique',  color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri', type: 'academic' },
 ]
 
 // ─── Modules (lesson tracker) ────────────────────────────────────────────────
@@ -195,3 +195,24 @@ export const feedbacks: TeacherFeedback[] = [
   { id: 'f7',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Karimi',  subjectId: 's2', rating: 5, isPositive: true,  date: '2025-03-15', comment: 'Le projet full-stack est impressionnant. Architecture propre, bonnes pratiques respectées, et une belle UI. Excellent candidat pour le marché du travail.' },
   { id: 'f8',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Khaled',  subjectId: 's1', rating: 4, isPositive: true,  date: '2025-04-01', comment: 'Le projet algorithmique montre une vraie maturité. Les optimisations proposées sont pertinentes et bien argumentées.' },
 ]
+
+export const mockGroups = [
+  { id: 'g1',  name: 'G1',  description: 'Groupe 1' },
+  { id: 'g2',  name: 'G2',  description: 'Groupe 2' },
+  { id: 'g3',  name: 'G3',  description: 'Groupe 3' },
+  { id: 'g4',  name: 'G4',  description: 'Groupe 4' },
+  { id: 'g5',  name: 'G5',  description: 'Groupe 5' },
+  { id: 'g6',  name: 'G6',  description: 'Groupe 6' },
+  { id: 'g7',  name: 'G7',  description: 'Groupe 7' },
+  { id: 'g8',  name: 'G8',  description: 'Groupe 8' },
+  { id: 'g9',  name: 'G9',  description: 'Groupe 9' },
+  { id: 'g10', name: 'G10', description: 'Groupe 10' },
+]
+
+export const mockGroupStudents = [
+  { groupId: 'g1', studentId: 'EMSI-2024-0142', name: 'Abdessamad Abounouh' },
+  { groupId: 'g1', studentId: 'demo-student-2', name: 'Yassine El Amrani' },
+  { groupId: 'g1', studentId: 'demo-student-3', name: 'Sofia Benjelloun' },
+  { groupId: 'g2', studentId: 'demo-student-4', name: 'Karim Alaoui' },
+]
+

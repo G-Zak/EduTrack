@@ -103,7 +103,7 @@ export default function Modules() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="mb-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">Mes modules</h1>
+      <h1 className="text-3xl font-bold text-[var(--color-text)] mb-2">Mes modules</h1>
       <p className="mb-8 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Clique sur un module pour voir ses leçons.</p>
       <div className="grid grid-cols-2 gap-4">
         {modules.map(m => {

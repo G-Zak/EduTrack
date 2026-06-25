@@ -13,6 +13,7 @@ export interface Database {
         Row: {
           id: string
           name: string
+          role: 'student' | 'teacher'
           institution: string | null
           year: string | null
           track: string | null
@@ -21,6 +22,7 @@ export interface Database {
         Insert: {
           id: string
           name: string
+          role?: 'student' | 'teacher'
           institution?: string | null
           year?: string | null
           track?: string | null
@@ -28,10 +30,12 @@ export interface Database {
         }
         Update: {
           name?: string
+          role?: 'student' | 'teacher'
           institution?: string | null
           year?: string | null
           track?: string | null
         }
+        Relationships: []
       }
       subjects: {
         Row: {
@@ -64,11 +68,13 @@ export interface Database {
           teacher?: string | null
           is_active?: boolean
         }
+        Relationships: []
       }
       tasks: {
         Row: {
           id: string
           user_id: string
+          group_id: string | null
           type: 'simple' | 'complex'
           title: string
           description: string
@@ -92,6 +98,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          group_id?: string | null
           type: 'simple' | 'complex'
           title: string
           description: string
@@ -113,6 +120,7 @@ export interface Database {
           created_at?: string
         }
         Update: {
+          group_id?: string | null
           title?: string
           description?: string
           category?: string
@@ -130,6 +138,7 @@ export interface Database {
           grade?: number | null
           notes?: string | null
         }
+        Relationships: []
       }
       subtasks: {
         Row: {
@@ -163,6 +172,7 @@ export interface Database {
           completed_date?: string | null
           notes?: string | null
         }
+        Relationships: []
       }
       study_sessions: {
         Row: {
@@ -195,6 +205,7 @@ export interface Database {
           notes?: string | null
           quality?: number | null
         }
+        Relationships: []
       }
       reflections: {
         Row: {
@@ -252,12 +263,14 @@ export interface Database {
           perceived_difficulty?: number
           notes?: string | null
         }
+        Relationships: []
       }
       grades: {
         Row: {
           id: string
           user_id: string
           subject_id: string
+          group_id: string | null
           title: string
           value: number
           weight: number
@@ -270,6 +283,7 @@ export interface Database {
           id?: string
           user_id: string
           subject_id: string
+          group_id?: string | null
           title: string
           value: number
           weight: number
@@ -279,6 +293,7 @@ export interface Database {
           created_at?: string
         }
         Update: {
+          group_id?: string | null
           title?: string
           value?: number
           weight?: number
@@ -286,12 +301,14 @@ export interface Database {
           teacher?: string
           type?: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
         }
+        Relationships: []
       }
       absences: {
         Row: {
           id: string
           user_id: string
           subject_id: string | null
+          group_id: string | null
           date: string
           duration: 'half' | 'full'
           reason: string | null
@@ -303,6 +320,7 @@ export interface Database {
           id?: string
           user_id: string
           subject_id?: string | null
+          group_id?: string | null
           date: string
           duration: 'half' | 'full'
           reason?: string | null
@@ -311,10 +329,61 @@ export interface Database {
           created_at?: string
         }
         Update: {
+          group_id?: string | null
           reason?: string | null
           excused?: boolean
           certificate_provided?: boolean
         }
+        Relationships: []
+      }
+      groups: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          description?: string | null
+        }
+        Relationships: []
+      }
+      group_students: {
+        Row: {
+          group_id: string
+          student_id: string
+        }
+        Insert: {
+          group_id: string
+          student_id: string
+        }
+        Update: {
+          group_id?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      group_teachers: {
+        Row: {
+          group_id: string
+          teacher_id: string
+        }
+        Insert: {
+          group_id: string
+          teacher_id: string
+        }
+        Update: {
+          group_id?: string
+          teacher_id?: string
+        }
+        Relationships: []
       }
     }
     Views: Record<string, never>

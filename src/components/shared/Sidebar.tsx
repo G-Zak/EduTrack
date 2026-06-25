@@ -101,21 +101,39 @@ export default function Sidebar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const displayName = user?.user_metadata?.name ?? user?.email ?? 'Étudiant'
-  const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+  const isTeacher = user?.role === 'teacher'
+  const displayName = user?.user_metadata?.name ?? user?.email ?? (isTeacher ? 'Enseignant' : 'Étudiant')
+  
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || (isTeacher ? 'EN' : 'ET')
+
+  const visibleLinks = links.filter(link => {
+    if (isTeacher && (link.to === '/avis' || link.to === '/analytics')) return false
+    return true
+  })
+
+  const visibleProgressLinks = progressLinks.filter(link => {
+    if (isTeacher && (link.to === '/progression' || link.to === '/reflexion' || link.to === '/modules')) return false
+    return true
+  })
 
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-[220px] flex-shrink-0 flex-col border-r border-white/10 bg-[var(--color-primary)] text-white">
       {/* Brand */}
       <div className="border-b border-white/10 px-5 py-5">
         <div className="text-[var(--text-lg)] font-bold tracking-tight">EduTrack</div>
-        <div className="mt-0.5 text-[var(--text-xs)] text-white/60">Suivi académique</div>
+        <div className="mt-0.5 text-[var(--text-xs)] text-white/60">{isTeacher ? 'Espace Enseignant' : 'Suivi académique'}</div>
       </div>
 
       {/* Main nav */}
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pt-3">
         <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Académique</div>
-        {links.map(({ to, label, icon }) => (
+        {visibleLinks.map(({ to, label, icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -133,23 +151,27 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        <div className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Développement</div>
-        {progressLinks.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[var(--text-xs)] font-medium transition-all ${
-                isActive
-                  ? 'bg-white/20 text-white shadow-sm'
-                  : 'text-white/65 hover:bg-white/10 hover:text-white'
-              }`
-            }
-          >
-            {icon}
-            {label}
-          </NavLink>
-        ))}
+        {visibleProgressLinks.length > 0 && (
+          <>
+            <div className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/40">Développement</div>
+            {visibleProgressLinks.map(({ to, label, icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[var(--text-xs)] font-medium transition-all ${
+                    isActive
+                      ? 'bg-white/20 text-white shadow-sm'
+                      : 'text-white/65 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                {icon}
+                {label}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       {/* User footer */}

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { grades, absences, tasks, feedbacks, subjects, modules, profile } from '../data/mockData'
+import { grades, absences, tasks, feedbacks, subjects, modules, profile, mockGroups, mockGroupStudents } from '../data/mockData'
 import { useProgress } from '../context/ProgressContext'
+import { useAuth } from '../context/AuthContext'
 import RadialProgress from '../components/shared/RadialProgress'
 
 function subjectAverage(subjectId: string) {
@@ -15,17 +16,180 @@ function generalAverage() {
   let totalCoeff = 0, weightedSum = 0
   subjects.forEach(s => {
     const avg = subjectAverage(s.id)
-    weightedSum += avg * s.coefficient
-    totalCoeff += s.coefficient
+    const coeff = s.coefficient ?? 1
+    weightedSum += avg * coeff
+    totalCoeff += coeff
   })
   return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
 }
 
-export default function Dashboard() {
+// ─── Teacher Dashboard ────────────────────────────────────────────────────────
+
+function TeacherDashboard() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const teacherName = user?.user_metadata?.name ?? user?.email ?? 'Enseignant'
+
+  // Stats across all groups
+  const totalStudents = mockGroupStudents.length
+  const totalGroups = mockGroups.length
+
+  // Tasks assigned by teacher (createdBy teacher) across all groups
+  const assignedTasks = tasks.filter(t => (t as any).createdBy === 'teacher' || (t as any).created_by === 'teacher')
+  const pendingReview = assignedTasks.filter(t => (t.status as string) === 'submitted').length
+  const completedAssigned = assignedTasks.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'graded').length
+
+  // Grade distribution from all grades
+  const excellent = grades.filter(g => g.value >= 16).length
+  const satisfactory = grades.filter(g => g.value >= 12 && g.value < 16).length
+  const failing = grades.filter(g => g.value < 12).length
+  const totalGrades = grades.length
+
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">
+          Bonjour, {teacherName.split(' ')[0]}
+        </h1>
+        <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
+          Espace Enseignant · {today}
+        </p>
+      </div>
+
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl bg-[var(--color-primary)] p-5 text-white">
+          <div className="text-[var(--text-xs)] font-medium opacity-75 uppercase tracking-wider">Groupes</div>
+          <div className="mt-2 text-4xl font-bold">{totalGroups}</div>
+          <div className="mt-1 text-[var(--text-xs)] opacity-60">classes actives</div>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5">
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Étudiants</div>
+          <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{totalStudents}</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">inscrits au total</div>
+        </div>
+
+        <button
+          onClick={() => navigate('/taches')}
+          className={`rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
+            pendingReview > 0 ? 'border-amber-200 bg-amber-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
+          }`}
+        >
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">À corriger</div>
+          <div className={`mt-2 text-4xl font-bold ${pendingReview > 0 ? 'text-amber-600' : 'text-[var(--color-text)]'}`}>
+            {pendingReview}
+          </div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">travaux soumis</div>
+        </button>
+
+        <button
+          onClick={() => navigate('/notes')}
+          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]"
+        >
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Notes saisies</div>
+          <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{totalGrades}</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedAssigned} devoirs terminés</div>
+        </button>
+      </div>
+
+      {/* Middle row */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Groups overview */}
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Mes groupes</h2>
+            <button onClick={() => navigate('/taches')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Gérer</button>
+          </div>
+          <div className="space-y-3">
+            {mockGroups.map(g => {
+              const studentCount = mockGroupStudents.filter(gs => gs.groupId === g.id).length
+              return (
+                <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors cursor-pointer" onClick={() => navigate('/taches')}>
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm">
+                    {g.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">{g.name}</div>
+                    {g.description && <div className="text-xs text-[var(--color-text-secondary)] truncate">{g.description}</div>}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-sm font-bold text-[var(--color-text)]">{studentCount}</div>
+                    <div className="text-xs text-[var(--color-text-secondary)]">étudiants</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Grade distribution */}
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Répartition des notes</h2>
+            <button onClick={() => navigate('/notes')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Voir tout</button>
+          </div>
+          {totalGrades === 0 ? (
+            <p className="text-sm text-[var(--color-text-secondary)]">Aucune note saisie pour le moment.</p>
+          ) : (
+            <div className="space-y-4">
+              {[
+                { label: 'Excellent (≥ 16)', count: excellent, color: '#16a34a', bg: 'bg-green-100' },
+                { label: 'Satisfaisant (12–16)', count: satisfactory, color: '#d97706', bg: 'bg-amber-100' },
+                { label: 'Insuffisant (< 12)', count: failing, color: '#dc2626', bg: 'bg-red-100' },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-3">
+                  <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0`} style={{ background: item.color }} />
+                  <span className="flex-1 text-[var(--text-sm)] text-[var(--color-text)]">{item.label}</span>
+                  <div className="w-28 h-2 rounded-full bg-[var(--color-gray-bg)] flex-shrink-0">
+                    <div className="h-2 rounded-full transition-all" style={{ width: `${(item.count / totalGrades) * 100}%`, background: item.color }} />
+                  </div>
+                  <span className="w-8 text-right text-[var(--text-sm)] font-bold text-[var(--color-text)]">{item.count}</span>
+                </div>
+              ))}
+              <div className="mt-2 pt-3 border-t border-[var(--color-border)] flex justify-between text-xs text-[var(--color-text-secondary)]">
+                <span>Total : {totalGrades} notes</span>
+                <span>Taux de réussite : {totalGrades ? Math.round(((excellent + satisfactory) / totalGrades) * 100) : 0}%</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Task completion overview */}
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Suivi des devoirs assignés</h2>
+          <button onClick={() => navigate('/taches')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Gérer</button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {([
+            { label: 'À faire', count: assignedTasks.filter(t => t.status === 'pending').length, style: 'bg-gray-50 border-gray-200 text-gray-600' },
+            { label: 'En cours', count: assignedTasks.filter(t => t.status === 'in_progress').length, style: 'bg-blue-50 border-blue-200 text-blue-700' },
+            { label: 'Soumis', count: pendingReview, style: 'bg-amber-50 border-amber-200 text-amber-700' },
+            { label: 'Terminés', count: completedAssigned, style: 'bg-green-50 border-green-200 text-green-700' },
+          ]).map(item => (
+            <div key={item.label} className={`rounded-xl border p-4 text-center ${item.style}`}>
+              <div className="text-3xl font-bold">{item.count}</div>
+              <div className="mt-1 text-[var(--text-xs)] font-medium">{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Student Dashboard ────────────────────────────────────────────────────────
+
+function StudentDashboard() {
   const { progress, isCompleted } = useProgress()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Academic stats
   const genAvg = generalAverage()
   const totalAbsenceDays = absences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
   const absenceRate = +((totalAbsenceDays / 120) * 100).toFixed(1)
@@ -33,7 +197,6 @@ export default function Dashboard() {
   const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
   const recentFeedbacks = [...feedbacks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
 
-  // Lesson progress
   const allLessons = modules.flatMap(m => m.chapters.flatMap(c => c.lessons))
   const totalLessons = allLessons.length
   const completedCount = progress.completedLessons.length
@@ -45,26 +208,27 @@ export default function Dashboard() {
     genAvg >= 14 ? 'Assez Bien' :
     genAvg >= 12 ? 'Passable' : 'Insuffisant'
 
+  const studentName = user?.user_metadata?.name ?? user?.email ?? profile.name
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       {/* Welcome */}
       <div>
-        <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">
-          Bonjour, {profile.name.split(' ')[0]} 👋
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">
+          Bonjour, {studentName.split(' ')[0]}
         </h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
-          {profile.year} · {profile.institution} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          {user?.groupName ?? profile.year} · {profile.institution} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
       </div>
 
       {/* Academic KPI cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {/* General average */}
         <button
           onClick={() => navigate('/notes')}
           className="group rounded-2xl bg-[var(--color-primary)] p-5 text-white text-left transition-transform hover:scale-[1.02]"
         >
-          <div className="text-[var(--text-xs)] font-medium opacity-80 uppercase tracking-wider">📊 Moyenne Générale</div>
+          <div className="text-[var(--text-xs)] font-medium opacity-80 uppercase tracking-wider">Moyenne Générale</div>
           <div className="mt-2 text-4xl font-bold">{genAvg}</div>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-[var(--text-xs)] opacity-70">/ 20</span>
@@ -72,28 +236,26 @@ export default function Dashboard() {
           </div>
         </button>
 
-        {/* Absence rate */}
         <button
           onClick={() => navigate('/absences')}
           className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
             absenceRate > 10 ? 'border-red-200 bg-red-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
           }`}
         >
-          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">📍 Absences</div>
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Absences</div>
           <div className={`mt-2 text-4xl font-bold ${absenceRate > 10 ? 'text-red-500' : 'text-[var(--color-text)]'}`}>
             {absenceRate}%
           </div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{totalAbsenceDays}j · {absences.length} entrées</div>
         </button>
 
-        {/* Tasks overdue */}
         <button
           onClick={() => navigate('/taches')}
           className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
             overdueCount > 0 ? 'border-orange-200 bg-orange-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
           }`}
         >
-          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">📝 Tâches</div>
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Tâches</div>
           <div className={`mt-2 text-4xl font-bold ${overdueCount > 0 ? 'text-orange-500' : 'text-[var(--color-text)]'}`}>
             {overdueCount > 0 ? overdueCount : pendingCount}
           </div>
@@ -102,12 +264,11 @@ export default function Dashboard() {
           </div>
         </button>
 
-        {/* Progression */}
         <button
           onClick={() => navigate('/analytics')}
           className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]"
         >
-          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">📈 Analytics</div>
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Analytics</div>
           <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{subjects.length}</div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">matières · {grades.length} notes</div>
         </button>
@@ -115,7 +276,6 @@ export default function Dashboard() {
 
       {/* Middle row: Subject averages + Recent feedback */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Subject averages */}
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Notes par matière</h2>
@@ -138,7 +298,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent feedback */}
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Derniers avis professeurs</h2>
@@ -237,4 +396,12 @@ export default function Dashboard() {
       </div>
     </div>
   )
+}
+
+// ─── Entry point ──────────────────────────────────────────────────────────────
+
+export default function Dashboard() {
+  const { user } = useAuth()
+  const isTeacher = user?.role === 'teacher'
+  return isTeacher ? <TeacherDashboard /> : <StudentDashboard />
 }

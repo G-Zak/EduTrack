@@ -52,7 +52,7 @@ export default function ReflectionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">🪞 Réflexion & Auto-évaluation</h1>
+          <h1 className="text-3xl font-bold text-[var(--color-text)]">Réflexion & Auto-évaluation</h1>
           <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
             Mesure ton évolution sur les facteurs que tu contrôles.
           </p>

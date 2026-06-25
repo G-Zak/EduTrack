@@ -50,15 +50,45 @@ export async function getSubjects(userId?: string, type?: SubjectType): Promise<
     if (type) query = query.eq('type', type)
     const { data, error } = await query.order('name')
     if (!error && data) {
-      return data.map(row => ({
-        id: row.id,
-        name: row.name,
-        color: row.color,
-        type: row.type as SubjectType,
-        coefficient: row.coefficient ?? undefined,
-        teacher: row.teacher ?? undefined,
-        isActive: row.is_active,
-      }))
+      if (data.length === 0) {
+        // Auto-seed default subjects in the database for this student
+        const defaults = [...DEFAULT_ACADEMIC_SUBJECTS, ...DEFAULT_PERSONAL_SUBJECTS]
+        const toInsert = defaults.map(s => ({
+          user_id: userId,
+          name: s.name,
+          color: s.color,
+          type: s.type,
+          coefficient: s.coefficient ?? null,
+          teacher: s.teacher ?? null,
+          is_active: true,
+        }))
+        const { data: inserted, error: insertError } = await supabase
+          .from('subjects')
+          .insert(toInsert)
+          .select()
+        if (!insertError && inserted) {
+          const mapped = inserted.map(row => ({
+            id: row.id,
+            name: row.name,
+            color: row.color,
+            type: row.type as SubjectType,
+            coefficient: row.coefficient ?? undefined,
+            teacher: row.teacher ?? undefined,
+            isActive: row.is_active,
+          }))
+          return type ? mapped.filter(s => s.type === type) : mapped
+        }
+      } else {
+        return data.map(row => ({
+          id: row.id,
+          name: row.name,
+          color: row.color,
+          type: row.type as SubjectType,
+          coefficient: row.coefficient ?? undefined,
+          teacher: row.teacher ?? undefined,
+          isActive: row.is_active,
+        }))
+      }
     }
   }
 

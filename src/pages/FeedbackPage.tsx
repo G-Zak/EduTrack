@@ -30,7 +30,7 @@ export default function FeedbackPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">💬 Avis des Professeurs</h1>
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">Avis des Professeurs</h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Retours qualitatifs et évaluations de vos enseignants.</p>
       </div>
 

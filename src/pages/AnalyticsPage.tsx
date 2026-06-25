@@ -13,8 +13,9 @@ function generalAverage() {
   let totalCoeff = 0, weightedSum = 0
   subjects.forEach(s => {
     const avg = subjectAverage(s.id)
-    weightedSum += avg * s.coefficient
-    totalCoeff += s.coefficient
+    const coeff = s.coefficient ?? 1
+    weightedSum += avg * coeff
+    totalCoeff += coeff
   })
   return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
 }
@@ -69,7 +70,7 @@ export default function AnalyticsPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">📈 Analytics & Performance</h1>
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">Analytics & Performance</h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Vue globale de votre progression académique.</p>
       </div>
 
@@ -135,7 +136,7 @@ export default function AnalyticsPage() {
               <YAxis domain={[0, 20]} tick={{ fontSize: 11, fill: '#6b7280' }} />
               <Tooltip
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
-                formatter={(v: number) => [`${v}/20`]}
+                formatter={(v: any) => [`${v}/20`]}
               />
               <Legend />
               <Line type="monotone" dataKey="Moyenne" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 4 }} name="Moyenne réelle" />

@@ -156,7 +156,7 @@ export default function ProgressTrackerPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">📚 Suivi de Progression</h1>
+          <h1 className="text-3xl font-bold text-[var(--color-text)]">Suivi de Progression</h1>
           <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Matières académiques et personnelles — temps d'étude et progression.</p>
         </div>
         <div className="flex gap-3">
@@ -210,7 +210,7 @@ export default function ProgressTrackerPage() {
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} />
               <YAxis unit="h" tick={{ fontSize: 11, fill: '#6b7280' }} />
               <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
-                formatter={(v: number, _: string, props) => [`${v}h`, props.payload?.fullName ?? 'Heures']} />
+                formatter={(v: any, _name: any, props: any) => [`${v}h`, props.payload?.fullName ?? 'Heures']} />
               <Bar dataKey="heures" radius={[6, 6, 0, 0]}>
                 {studyBySubject.map((entry, idx) => (
                   <rect key={idx} fill={entry.color} />
