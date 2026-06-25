@@ -136,6 +136,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           student_id: data.user.id,
         })
       }
+
+      // Enroll teacher in all groups
+      if (role === 'teacher') {
+        const { data: allGroups } = await supabase.from('groups').select('id')
+        if (allGroups && allGroups.length > 0) {
+          const teacherLinks = allGroups.map(g => ({
+            group_id: g.id,
+            teacher_id: data.user!.id,
+          }))
+          await supabase.from('group_teachers').insert(teacherLinks)
+        }
+      }
     }
 
     return { error: null }

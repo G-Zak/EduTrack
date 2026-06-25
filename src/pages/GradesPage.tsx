@@ -83,7 +83,6 @@ export default function GradesPage() {
 
   // Grade Form Inputs
   const [formSubjectId, setFormSubjectId] = useState('')
-  const [formTitle, setFormTitle] = useState('')
   const [formValue, setFormValue] = useState('')
   const [formWeight, setFormWeight] = useState('1')
   const [formType, setFormType] = useState<'exam' | 'tp' | 'cc' | 'project' | 'quiz'>('cc')
@@ -98,13 +97,25 @@ export default function GradesPage() {
           .order('name')
           .then(({ data, error }) => {
             if (!error && data) {
-              setGroups(data)
-              if (data.length > 0) setSelectedGroupId(data[0].id)
+              const sorted = [...data].sort((a, b) => {
+                const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+                const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+                return a.name.localeCompare(b.name)
+              })
+              setGroups(sorted)
+              if (sorted.length > 0) setSelectedGroupId(sorted[0].id)
             }
           })
       } else {
-        setGroups(mockGroups)
-        if (mockGroups.length > 0) setSelectedGroupId(mockGroups[0].id)
+        const sorted = [...mockGroups].sort((a, b) => {
+          const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+          const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+          if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+          return a.name.localeCompare(b.name)
+        })
+        setGroups(sorted)
+        if (sorted.length > 0) setSelectedGroupId(sorted[0].id)
       }
     }
   }, [isTeacher, isConfigured])
@@ -217,7 +228,7 @@ export default function GradesPage() {
 
   const handleAddGrade = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedStudentId || !formSubjectId || !formValue || !formTitle.trim()) {
+    if (!selectedStudentId || !formSubjectId || !formValue) {
       alert('Veuillez remplir tous les champs obligatoires.')
       return
     }
@@ -229,12 +240,13 @@ export default function GradesPage() {
     }
 
     const weightNum = parseFloat(formWeight)
+    const calculatedTitle = typeLabel[formType] || formType
 
     const newGrade: Grade = {
       id: `grade-${Date.now()}`,
       studentId: selectedStudentId,
       subjectId: formSubjectId,
-      title: formTitle,
+      title: calculatedTitle,
       value: valueNum,
       weight: isNaN(weightNum) ? 1 : weightNum,
       date: formDate || new Date().toISOString().split('T')[0],
@@ -247,7 +259,7 @@ export default function GradesPage() {
         user_id: selectedStudentId,
         subject_id: formSubjectId,
         group_id: selectedGroupId || null,
-        title: formTitle,
+        title: calculatedTitle,
         value: valueNum,
         weight: isNaN(weightNum) ? 1 : weightNum,
         date: formDate || new Date().toISOString().split('T')[0],
@@ -272,7 +284,6 @@ export default function GradesPage() {
       localStorage.setItem('demo_all_grades', JSON.stringify(allList))
     }
 
-    setFormTitle('')
     setFormValue('')
     setFormWeight('1')
     setFormDate(new Date().toISOString().split('T')[0])
@@ -350,17 +361,7 @@ export default function GradesPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Évaluation *</label>
-              <input
-                type="text"
-                value={formTitle}
-                onChange={e => setFormTitle(e.target.value)}
-                placeholder="Ex. Contrôle Continu 1, Projet Web"
-                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+
 
             <div>
               <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Note (sur 20) *</label>

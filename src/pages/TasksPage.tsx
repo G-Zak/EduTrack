@@ -44,13 +44,25 @@ export default function TasksPage() {
           .order('name')
           .then(({ data, error }) => {
             if (!error && data) {
-              setGroups(data)
-              if (data.length > 0) setSelectedGroupId(data[0].id)
+              const sorted = [...data].sort((a, b) => {
+                const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+                const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+                return a.name.localeCompare(b.name)
+              })
+              setGroups(sorted)
+              if (sorted.length > 0) setSelectedGroupId(sorted[0].id)
             }
           })
       } else {
-        setGroups(mockGroups)
-        if (mockGroups.length > 0) setSelectedGroupId(mockGroups[0].id)
+        const sorted = [...mockGroups].sort((a, b) => {
+          const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+          const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+          if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+          return a.name.localeCompare(b.name)
+        })
+        setGroups(sorted)
+        if (sorted.length > 0) setSelectedGroupId(sorted[0].id)
       }
     }
   }, [isTeacher, isConfigured])
@@ -354,8 +366,8 @@ export default function TasksPage() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-4">
-          <div className="bg-[var(--color-white)] rounded-xl p-6 max-w-2xl w-full my-8">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-start z-50 overflow-y-auto p-4">
+          <div className="max-w-2xl w-full my-8">
             <TaskCreationForm
               studentId={studentId}
               onTaskCreated={handleTaskCreated}

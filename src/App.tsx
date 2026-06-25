@@ -7,7 +7,6 @@ import Profil from './pages/Profil'
 import GradesPage from './pages/GradesPage'
 import AbsencesPage from './pages/AbsencesPage'
 import TasksPage from './pages/TasksPage'
-import FeedbackPage from './pages/FeedbackPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ProgressTrackerPage from './pages/ProgressTrackerPage'
 import ReflectionPage from './pages/ReflectionPage'
@@ -57,7 +56,6 @@ function ProtectedLayout() {
             <Route path="/notes" element={<GradesPage />} />
             <Route path="/absences" element={<AbsencesPage />} />
             <Route path="/taches" element={<TasksPage />} />
-            <Route path="/avis" element={<FeedbackPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/progression" element={<ProgressTrackerPage />} />
             <Route path="/reflexion" element={<ReflectionPage />} />
@@ -70,15 +68,19 @@ function ProtectedLayout() {
   )
 }
 
+import { ProgressProvider } from './context/ProgressContext'
+
 // ─── Root App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginRedirect />} />
-        <Route path="/*" element={<ProtectedLayout />} />
-      </Routes>
+      <ProgressProvider>
+        <Routes>
+          <Route path="/login" element={<LoginRedirect />} />
+          <Route path="/*" element={<ProtectedLayout />} />
+        </Routes>
+      </ProgressProvider>
     </AuthProvider>
   )
 }

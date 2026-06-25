@@ -1,21 +1,36 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { grades, absences, tasks, feedbacks, subjects, modules, profile, mockGroups, mockGroupStudents } from '../data/mockData'
+import { 
+  grades as mockGrades, 
+  absences as mockAbsences, 
+  tasks as mockTasks, 
+  feedbacks as mockFeedbacks, 
+  subjects as mockSubjects, 
+  modules, 
+  profile, 
+  mockGroups, 
+  mockGroupStudents 
+} from '../data/mockData'
 import { useProgress } from '../context/ProgressContext'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import { getSubjects } from '../services/subjectService'
 import RadialProgress from '../components/shared/RadialProgress'
 
-function subjectAverage(subjectId: string) {
-  const sg = grades.filter(g => g.subjectId === subjectId)
+// ─── Helpers for calculations ──────────────────────────────────────────────────
+
+function getSubjectAverage(gradesList: any[], subjectId: string) {
+  const sg = gradesList.filter(g => g.subjectId === subjectId || g.subject_id === subjectId)
   if (!sg.length) return 0
-  const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
-  const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
+  const totalWeight = sg.reduce((s, g) => s + Number(g.weight), 0)
+  const weighted = sg.reduce((s, g) => s + Number(g.value) * Number(g.weight), 0)
   return +(weighted / totalWeight).toFixed(2)
 }
 
-function generalAverage() {
+function getGeneralAverage(gradesList: any[], subjectsList: any[]) {
   let totalCoeff = 0, weightedSum = 0
-  subjects.forEach(s => {
-    const avg = subjectAverage(s.id)
+  subjectsList.forEach(s => {
+    const avg = getSubjectAverage(gradesList, s.id)
     const coeff = s.coefficient ?? 1
     weightedSum += avg * coeff
     totalCoeff += coeff
@@ -27,23 +42,99 @@ function generalAverage() {
 
 function TeacherDashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isConfigured } = useAuth()
   const teacherName = user?.user_metadata?.name ?? user?.email ?? 'Enseignant'
 
-  // Stats across all groups
-  const totalStudents = mockGroupStudents.length
-  const totalGroups = mockGroups.length
+  const [totalStudents, setTotalStudents] = useState(0)
+  const [totalGroups, setTotalGroups] = useState(0)
+  const [pendingReview, setPendingReview] = useState(0)
+  const [totalGrades, setTotalGrades] = useState(0)
+  const [completedAssigned, setCompletedAssigned] = useState(0)
+  const [excellent, setExcellent] = useState(0)
+  const [satisfactory, setSatisfactory] = useState(0)
+  const [failing, setFailing] = useState(0)
+  
+  const [assignedTasks, setAssignedTasks] = useState<any[]>([])
+  const [groupsList, setGroupsList] = useState<any[]>([])
 
-  // Tasks assigned by teacher (createdBy teacher) across all groups
-  const assignedTasks = tasks.filter(t => (t as any).createdBy === 'teacher' || (t as any).created_by === 'teacher')
-  const pendingReview = assignedTasks.filter(t => (t.status as string) === 'submitted').length
-  const completedAssigned = assignedTasks.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'graded').length
+  useEffect(() => {
+    if (isConfigured && user?.id) {
+      // 1. Fetch groups teacher is assigned to
+      supabase.from('group_teachers')
+        .select('group_id, groups(id, name, description)')
+        .eq('teacher_id', user.id)
+        .then(({ data: gtData }) => {
+          if (gtData) {
+            const mappedGroups = gtData
+              .filter((g: any) => g.groups)
+              .map((g: any) => ({
+                id: g.groups.id,
+                name: g.groups.name,
+                description: g.groups.description,
+              }))
+              .sort((a, b) => {
+                const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+                const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+                return a.name.localeCompare(b.name)
+              })
+            setGroupsList(mappedGroups)
+            setTotalGroups(mappedGroups.length)
 
-  // Grade distribution from all grades
-  const excellent = grades.filter(g => g.value >= 16).length
-  const satisfactory = grades.filter(g => g.value >= 12 && g.value < 16).length
-  const failing = grades.filter(g => g.value < 12).length
-  const totalGrades = grades.length
+            const groupIds = mappedGroups.map(g => g.id)
+            if (groupIds.length > 0) {
+              // 2. Fetch student count in these groups
+              supabase.from('group_students')
+                .select('student_id', { count: 'exact', head: true })
+                .in('group_id', groupIds)
+                .then(({ count }) => {
+                  setTotalStudents(count || 0)
+                })
+
+              // 3. Fetch tasks in these groups
+              supabase.from('tasks')
+                .select('*')
+                .in('group_id', groupIds)
+                .then(({ data: tData }) => {
+                  if (tData) {
+                    setAssignedTasks(tData)
+                    setPendingReview(tData.filter(t => t.status === 'submitted').length)
+                    setCompletedAssigned(tData.filter(t => t.status === 'completed' || t.status === 'graded').length)
+                  }
+                })
+
+              // 4. Fetch grades in these groups
+              supabase.from('grades')
+                .select('*')
+                .in('group_id', groupIds)
+                .then(({ data: gData }) => {
+                  if (gData) {
+                    setTotalGrades(gData.length)
+                    setExcellent(gData.filter(g => g.value >= 16).length)
+                    setSatisfactory(gData.filter(g => g.value >= 12 && g.value < 16).length)
+                    setFailing(gData.filter(g => g.value < 12).length)
+                  }
+                })
+            }
+          }
+        })
+    } else {
+      // Demo mode fallbacks
+      setGroupsList(mockGroups)
+      setTotalGroups(mockGroups.length)
+      setTotalStudents(mockGroupStudents.length)
+
+      const fallbackTasks = mockTasks.filter(t => (t as any).createdBy === 'teacher' || (t as any).created_by === 'teacher')
+      setAssignedTasks(fallbackTasks)
+      setPendingReview(fallbackTasks.filter(t => t.status === 'submitted').length)
+      setCompletedAssigned(fallbackTasks.filter(t => t.status === 'completed' || t.status === 'graded').length)
+
+      setTotalGrades(mockGrades.length)
+      setExcellent(mockGrades.filter(g => g.value >= 16).length)
+      setSatisfactory(mockGrades.filter(g => g.value >= 12 && g.value < 16).length)
+      setFailing(mockGrades.filter(g => g.value < 12).length)
+    }
+  }, [isConfigured, user?.id])
 
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
 
@@ -105,8 +196,8 @@ function TeacherDashboard() {
             <button onClick={() => navigate('/taches')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Gérer</button>
           </div>
           <div className="space-y-3">
-            {mockGroups.map(g => {
-              const studentCount = mockGroupStudents.filter(gs => gs.groupId === g.id).length
+            {groupsList.map(g => {
+              // Note: approximate count in demo mode vs database fetch
               return (
                 <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors cursor-pointer" onClick={() => navigate('/taches')}>
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm">
@@ -117,8 +208,7 @@ function TeacherDashboard() {
                     {g.description && <div className="text-xs text-[var(--color-text-secondary)] truncate">{g.description}</div>}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-bold text-[var(--color-text)]">{studentCount}</div>
-                    <div className="text-xs text-[var(--color-text-secondary)]">étudiants</div>
+                    <div className="text-xs text-[var(--color-text-secondary)]">classe active</div>
                   </div>
                 </div>
               )
@@ -186,21 +276,72 @@ function TeacherDashboard() {
 // ─── Student Dashboard ────────────────────────────────────────────────────────
 
 function StudentDashboard() {
-  const { progress, isCompleted } = useProgress()
-  const { user } = useAuth()
   const navigate = useNavigate()
+  const { user, isConfigured } = useAuth()
+  const { progress, isCompleted } = useProgress()
 
-  const genAvg = generalAverage()
-  const totalAbsenceDays = absences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
+  const [studentGrades, setStudentGrades] = useState<any[]>([])
+  const [subjectsList, setSubjectsList] = useState<any[]>([])
+  const [studentAbsences, setStudentAbsences] = useState<any[]>([])
+  const [studentTasks, setStudentTasks] = useState<any[]>([])
+
+  const studentId = user?.id?.startsWith('demo-') ? 'EMSI-2024-0142' : (user?.id || 'EMSI-2024-0142')
+
+  useEffect(() => {
+    if (isConfigured && user?.id) {
+      // 1. Fetch subjects
+      getSubjects(user.id).then(list => {
+        setSubjectsList(list)
+      })
+
+      // 2. Fetch grades
+      supabase.from('grades')
+        .select('*')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          if (data) setStudentGrades(data)
+        })
+
+      // 3. Fetch absences
+      supabase.from('absences')
+        .select('*')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          if (data) setStudentAbsences(data)
+        })
+
+      // 4. Fetch tasks (own + group-assigned)
+      const ownReq = supabase.from('tasks').select('*').eq('user_id', user.id)
+      const groupReq = user.groupId
+        ? supabase.from('tasks').select('*').eq('group_id', user.groupId).eq('user_id', user.id)
+        : Promise.resolve({ data: [], error: null })
+
+      Promise.all([ownReq, groupReq]).then(([own, grp]) => {
+        const allRows = [...(own.data ?? []), ...(grp.data ?? [])]
+        const seen = new Set<string>()
+        const unique = allRows.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true })
+        setStudentTasks(unique)
+      })
+    } else {
+      // Offline fallback
+      setSubjectsList(mockSubjects)
+      setStudentGrades(mockGrades.filter(g => g.studentId === studentId))
+      setStudentAbsences(mockAbsences.filter(a => a.studentId === studentId))
+      setStudentTasks(mockTasks.filter(t => t.studentId === studentId))
+    }
+  }, [isConfigured, user?.id, user?.groupId, studentId])
+
+  const genAvg = getGeneralAverage(studentGrades, subjectsList)
+  const totalAbsenceDays = studentAbsences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
   const absenceRate = +((totalAbsenceDays / 120) * 100).toFixed(1)
-  const overdueCount = tasks.filter(t => t.status === 'overdue').length
-  const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
-  const recentFeedbacks = [...feedbacks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
+  
+  const overdueCount = studentTasks.filter(t => t.status === 'overdue').length
+  const pendingCount = studentTasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
 
   const allLessons = modules.flatMap(m => m.chapters.flatMap(c => c.lessons))
   const totalLessons = allLessons.length
   const completedCount = progress.completedLessons.length
-  const globalPct = Math.round((completedCount / totalLessons) * 100)
+  const globalPct = totalLessons ? Math.round((completedCount / totalLessons) * 100) : 0
 
   const MENTION =
     genAvg >= 18 ? 'Très Bien' :
@@ -209,6 +350,7 @@ function StudentDashboard() {
     genAvg >= 12 ? 'Passable' : 'Insuffisant'
 
   const studentName = user?.user_metadata?.name ?? user?.email ?? profile.name
+  const groupLabel = user?.groupName ?? profile.year
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -218,7 +360,7 @@ function StudentDashboard() {
           Bonjour, {studentName.split(' ')[0]}
         </h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
-          {user?.groupName ?? profile.year} · {profile.institution} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          {groupLabel} · {profile.institution} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
       </div>
 
@@ -246,7 +388,7 @@ function StudentDashboard() {
           <div className={`mt-2 text-4xl font-bold ${absenceRate > 10 ? 'text-red-500' : 'text-[var(--color-text)]'}`}>
             {absenceRate}%
           </div>
-          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{totalAbsenceDays}j · {absences.length} entrées</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{totalAbsenceDays}j · {studentAbsences.length} entrées</div>
         </button>
 
         <button
@@ -265,25 +407,25 @@ function StudentDashboard() {
         </button>
 
         <button
-          onClick={() => navigate('/analytics')}
+          onClick={() => navigate('/notes')}
           className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]"
         >
-          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Analytics</div>
-          <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{subjects.length}</div>
-          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">matières · {grades.length} notes</div>
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Matières</div>
+          <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{subjectsList.length}</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">actives · {studentGrades.length} notes</div>
         </button>
       </div>
 
-      {/* Middle row: Subject averages + Recent feedback */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Middle row: Subject averages */}
+      <div className="grid grid-cols-1 gap-6">
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Notes par matière</h2>
             <button onClick={() => navigate('/notes')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Voir tout</button>
           </div>
           <div className="space-y-3">
-            {subjects.map(s => {
-              const avg = subjectAverage(s.id)
+            {subjectsList.map(s => {
+              const avg = getSubjectAverage(studentGrades, s.id)
               return (
                 <div key={s.id} className="flex items-center gap-3">
                   <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
@@ -292,43 +434,6 @@ function StudentDashboard() {
                     <div className="h-1.5 rounded-full" style={{ width: `${(avg / 20) * 100}%`, background: s.color }} />
                   </div>
                   <span className="w-10 text-right text-[var(--text-sm)] font-bold text-[var(--color-text)]">{avg}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Derniers avis professeurs</h2>
-            <button onClick={() => navigate('/avis')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">Voir tout</button>
-          </div>
-          <div className="space-y-4">
-            {recentFeedbacks.map(f => {
-              const subj = subjects.find(s => s.id === f.subjectId)
-              return (
-                <div key={f.id} className="flex gap-3">
-                  <div
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white text-[var(--text-xs)] font-bold"
-                    style={{ background: subj?.color || 'var(--color-primary)' }}
-                  >
-                    {f.teacherName.split(' ').pop()?.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-[var(--text-xs)]">
-                      <span className="font-medium text-[var(--color-text)]">{f.teacherName}</span>
-                      <span className="text-[var(--color-text-secondary)]">·</span>
-                      <span className="text-[var(--color-text-secondary)]">{subj?.name}</span>
-                      <div className="ml-auto flex">
-                        {[1,2,3,4,5].map(i => (
-                          <svg key={i} className={`h-3 w-3 ${i <= f.rating ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)] line-clamp-2 italic">"{f.comment}"</p>
-                  </div>
                 </div>
               )
             })}
@@ -344,7 +449,7 @@ function StudentDashboard() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(['overdue', 'in_progress', 'pending', 'graded'] as const).map(status => {
-            const count = tasks.filter(t => t.status === status).length
+            const count = studentTasks.filter(t => t.status === status).length
             const cfg = {
               overdue:     { label: 'En retard',  bg: 'bg-red-50',   border: 'border-red-200',   text: 'text-red-600' },
               in_progress: { label: 'En cours',   bg: 'bg-blue-50',  border: 'border-blue-200',  text: 'text-blue-600' },
@@ -374,7 +479,7 @@ function StudentDashboard() {
           {modules.map(m => {
             const ids = m.chapters.flatMap(c => c.lessons.map(l => l.id))
             const done = ids.filter(id => isCompleted(id)).length
-            const pct = Math.round((done / ids.length) * 100)
+            const pct = ids.length ? Math.round((done / ids.length) * 100) : 0
             return (
               <button
                 key={m.id}

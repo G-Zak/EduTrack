@@ -22,21 +22,38 @@ export default function AuthForm() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setAvailableGroups(mockGroups)
+      const sorted = [...mockGroups].sort((a, b) => {
+        const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+        const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+        return a.name.localeCompare(b.name)
+      })
+      setAvailableGroups(sorted)
       return
     }
     supabase.from('groups').select('id, name').order('name').then(({ data }) => {
-      if (data && data.length > 0) setAvailableGroups(data)
+      if (data && data.length > 0) {
+        const sorted = [...data].sort((a, b) => {
+          const numA = parseInt(a.name.replace(/\D/g, ''), 10)
+          const numB = parseInt(b.name.replace(/\D/g, ''), 10)
+          if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+          return a.name.localeCompare(b.name)
+        })
+        setAvailableGroups(sorted)
+      }
     })
   }, [])
 
   // Pre-select first group when role is student
   useEffect(() => {
-    if (role === 'student' && availableGroups.length > 0 && !groupId) {
-      setGroupId(availableGroups[0].id)
+    if (role === 'student' && availableGroups.length > 0) {
+      const exists = availableGroups.some(g => g.id === groupId)
+      if (!groupId || !exists) {
+        setGroupId(availableGroups[0].id)
+      }
     }
     if (role === 'teacher') setGroupId('')
-  }, [role, availableGroups])
+  }, [role, availableGroups, groupId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,11 +93,10 @@ export default function AuthForm() {
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(null) }}
-                className={`flex-1 rounded-lg py-2 text-[var(--text-sm)] font-medium transition-all ${
-                  mode === m
+                className={`flex-1 rounded-lg py-2 text-[var(--text-sm)] font-medium transition-all ${mode === m
                     ? 'bg-[var(--color-white)] text-[var(--color-text)] shadow-sm'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                }`}
+                  }`}
               >
                 {m === 'signin' ? 'Se connecter' : "S'inscrire"}
               </button>
@@ -113,7 +129,7 @@ export default function AuthForm() {
                       type="text"
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      placeholder="Abdessamad Abounouh"
+                      placeholder="Your full name"
                       className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2.5 text-[var(--text-sm)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                     />
                   </div>
@@ -130,11 +146,10 @@ export default function AuthForm() {
                           key={opt.value}
                           type="button"
                           onClick={() => setRole(opt.value)}
-                          className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center transition-all ${
-                            role === opt.value
+                          className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center transition-all ${role === opt.value
                               ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]'
                               : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)]/40'
-                          }`}
+                            }`}
                         >
                           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={opt.icon} />
@@ -150,34 +165,18 @@ export default function AuthForm() {
                   {role === 'student' && (
                     <div>
                       <label className="block text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] mb-1">Groupe / Classe</label>
-                      <div className="space-y-1.5">
+                      <select
+                        value={groupId}
+                        onChange={e => setGroupId(e.target.value)}
+                        className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-2.5 text-[var(--text-sm)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                      >
+                        <option value="" disabled>Sélectionnez votre groupe / classe</option>
                         {availableGroups.map(g => (
-                          <button
-                            key={g.id}
-                            type="button"
-                            onClick={() => setGroupId(g.id)}
-                            className={`w-full flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all ${
-                              groupId === g.id
-                                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5'
-                                : 'border-[var(--color-border)] hover:border-[var(--color-primary)]/40'
-                            }`}
-                          >
-                            <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                              groupId === g.id ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-gray-bg)] text-[var(--color-text-secondary)]'
-                            }`}>
-                              {g.name.charAt(0)}
-                            </span>
-                            <span className={`text-xs font-medium ${groupId === g.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
-                              {g.name}
-                            </span>
-                            {groupId === g.id && (
-                              <svg className="h-4 w-4 ml-auto text-[var(--color-primary)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </button>
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                          </option>
                         ))}
-                      </div>
+                      </select>
                     </div>
                   )}
                 </>
@@ -211,24 +210,7 @@ export default function AuthForm() {
 
               {error && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[var(--text-xs)] text-red-700">
-                  <p className="font-semibold">{error}</p>
-                  {error.toLowerCase().includes('rate limit') && (
-                    <div className="mt-2.5 pt-2.5 border-t border-red-200/60 text-left text-red-800 space-y-1.5">
-                      <p className="font-semibold text-red-900 flex items-center gap-1">
-                        <span>💡</span> Comment résoudre cela sur votre projet Supabase :
-                      </p>
-                      <ol className="list-decimal list-inside space-y-1 text-[11px] text-red-700 leading-relaxed">
-                        <li>Allez sur le <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-red-900 transition-colors">Tableau de bord Supabase</a></li>
-                        <li>Sélectionnez votre projet (<strong>hmkwpkxynfqjkukdjikn</strong>)</li>
-                        <li>Dans le menu de gauche, allez dans <strong>Authentication</strong> &gt; <strong>Providers</strong> &gt; <strong>Email</strong></li>
-                        <li>Décochez/désactivez l'option <strong>Confirm email</strong></li>
-                        <li>Cliquez sur <strong>Save</strong> (Enregistrer)</li>
-                      </ol>
-                      <p className="text-[10px] text-red-600/80 italic leading-snug">
-                        Cela empêchera Supabase d'envoyer un mail de vérification, créera le compte instantanément et vous connectera automatiquement.
-                      </p>
-                    </div>
-                  )}
+                  {error}
                 </div>
               )}
 

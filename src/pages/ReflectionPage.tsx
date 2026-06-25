@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts'
 import { useReflections } from '../hooks/useReflections'
 import { useSubjects } from '../hooks/useSubjects'
 import ReflectionForm from '../components/reflection/ReflectionForm'
 import { REFLECTION_METRICS } from '../types/reflection'
 import type { ReflectionEntry } from '../types/reflection'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const METRIC_COLORS = Object.fromEntries(REFLECTION_METRICS.map(m => [m.key, m.color]))
 
@@ -20,10 +22,31 @@ function ScoreBadge({ value, label }: { value: number; label: string }) {
 }
 
 export default function ReflectionPage() {
-  const { reflections, loading, create, remove, getTrend } = useReflections()
+  const { user, isConfigured } = useAuth()
+  const { reflections, loading, create, remove, getTrend, reload } = useReflections()
   const { subjects } = useSubjects()
   const [showForm, setShowForm] = useState(false)
   const [activeMetrics, setActiveMetrics] = useState<Set<string>>(new Set(['satisfaction', 'motivation', 'mastery']))
+
+  // Realtime subscription for reflections
+  useEffect(() => {
+    if (!isConfigured || !user?.id) return
+
+    const sub = supabase
+      .channel(`realtime-reflections-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reflections', filter: `user_id=eq.${user.id}` },
+        () => {
+          reload()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(sub)
+    }
+  }, [isConfigured, user?.id, reload])
 
   const trend = getTrend()
 

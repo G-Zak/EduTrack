@@ -1,16 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useSubjects } from '../hooks/useSubjects'
 import { useStudySessions } from '../hooks/useStudySessions'
 import type { Subject } from '../types'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 // ─── Subject Management Modal ─────────────────────────────────────────────────
 
 const PRESET_COLORS = ['#7F77DD', '#1D9E75', '#BA7517', '#D4537E', '#0E7490', '#9333EA', '#F59E0B', '#EF4444', '#06B6D4', '#10B981']
 
-function AddSubjectModal({ onAdd, onClose }: { onAdd: (s: Omit<Subject, 'id'>) => void; onClose: () => void }) {
+function AddSubjectModal({ isStudent, onAdd, onClose }: { isStudent: boolean; onAdd: (s: Omit<Subject, 'id'>) => void; onClose: () => void }) {
   const [name, setName] = useState('')
-  const [type, setType] = useState<'academic' | 'personal'>('personal')
+  const [type, setType] = useState<'academic' | 'personal'>(isStudent ? 'personal' : 'academic')
   const [color, setColor] = useState(PRESET_COLORS[0])
   const [teacher, setTeacher] = useState('')
   const [coeff, setCoeff] = useState(2)
@@ -18,21 +20,25 @@ function AddSubjectModal({ onAdd, onClose }: { onAdd: (s: Omit<Subject, 'id'>) =
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-[var(--color-white)] rounded-2xl p-6 max-w-md w-full space-y-4">
-        <h3 className="text-[var(--text-base)] font-bold text-[var(--color-text)]">Ajouter une matière</h3>
-        <div>
-          <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">Type</label>
-          <div className="flex gap-3">
-            {(['academic', 'personal'] as const).map(t => (
-              <label key={t} className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 p-3 cursor-pointer transition-all ${type === t ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-[var(--color-border)]'}`}>
-                <input type="radio" className="sr-only" checked={type === t} onChange={() => setType(t)} />
-                <span className="text-[var(--text-xs)] font-medium">{t === 'academic' ? '🎓 Académique' : '🌱 Personnel'}</span>
-              </label>
-            ))}
+        <h3 className="text-[var(--text-base)] font-bold text-[var(--color-text)]">
+          {isStudent ? 'Ajouter une matière personnelle' : 'Ajouter une matière'}
+        </h3>
+        {!isStudent && (
+          <div>
+            <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">Type</label>
+            <div className="flex gap-3">
+              {(['academic', 'personal'] as const).map(t => (
+                <label key={t} className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 p-3 cursor-pointer transition-all ${type === t ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-[var(--color-border)]'}`}>
+                  <input type="radio" className="sr-only" checked={type === t} onChange={() => setType(t)} />
+                  <span className="text-[var(--text-xs)] font-medium">{t === 'academic' ? '🎓 Académique' : '🌱 Personnel'}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div>
           <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">Nom *</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="ex: Intelligence Artificielle"
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={isStudent ? "ex: Révisions, Sport, Anglais" : "ex: Intelligence Artificielle"}
             className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 text-[var(--text-sm)] text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" />
         </div>
         <div>
@@ -45,7 +51,7 @@ function AddSubjectModal({ onAdd, onClose }: { onAdd: (s: Omit<Subject, 'id'>) =
             ))}
           </div>
         </div>
-        {type === 'academic' && (
+        {!isStudent && type === 'academic' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">Professeur</label>
@@ -62,7 +68,7 @@ function AddSubjectModal({ onAdd, onClose }: { onAdd: (s: Omit<Subject, 'id'>) =
         <div className="flex gap-3 justify-end pt-2">
           <button onClick={onClose} className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-[var(--text-sm)] text-[var(--color-text)] hover:bg-[var(--color-gray-bg)]">Annuler</button>
           <button
-            onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), color, type, ...(type === 'academic' ? { teacher, coefficient: coeff } : {}), isActive: true }); onClose() }}
+            onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), color, type, ...(!isStudent && type === 'academic' ? { teacher, coefficient: coeff } : {}), isActive: true }); onClose() }}
             className="px-5 py-2 rounded-xl bg-[var(--color-primary)] text-white text-[var(--text-sm)] font-semibold hover:opacity-90">
             Ajouter
           </button>
@@ -132,13 +138,48 @@ function SessionLogger({ subjects, onLog, onClose }: { subjects: Subject[]; onLo
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ProgressTrackerPage() {
-  const { subjects, loading: subjectsLoading, create: createSubject } = useSubjects()
-  const { sessions, stats, log: logSession } = useStudySessions()
+  const { user, isConfigured } = useAuth()
+  const isStudent = user?.role !== 'teacher' // defaults to student if role is not teacher
+
+  const { subjects, loading: subjectsLoading, create: createSubject, reload: reloadSubjects } = useSubjects()
+  const { sessions, stats, log: logSession, reload: reloadSessions } = useStudySessions()
   const [showAddSubject, setShowAddSubject] = useState(false)
   const [showLogSession, setShowLogSession] = useState(false)
-  const [selectedType, setSelectedType] = useState<'all' | 'academic' | 'personal'>('all')
+  const [selectedType, setSelectedType] = useState<'academic' | 'personal'>('academic')
 
-  const filtered = selectedType === 'all' ? subjects : subjects.filter(s => s.type === selectedType)
+  const filtered = subjects.filter(s => s.type === selectedType)
+
+  // Realtime subscription for subjects and study sessions
+  useEffect(() => {
+    if (!isConfigured || !user?.id) return
+
+    const subjectsSub = supabase
+      .channel(`realtime-subjects-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'subjects', filter: `user_id=eq.${user.id}` },
+        () => {
+          reloadSubjects()
+        }
+      )
+      .subscribe()
+
+    const sessionsSub = supabase
+      .channel(`realtime-sessions-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'study_sessions', filter: `user_id=eq.${user.id}` },
+        () => {
+          reloadSessions()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(subjectsSub)
+      supabase.removeChannel(sessionsSub)
+    }
+  }, [isConfigured, user?.id, reloadSubjects, reloadSessions])
 
   // Build bar chart data: study hours per subject
   const studyBySubject = subjects.map(s => ({
@@ -164,14 +205,16 @@ export default function ProgressTrackerPage() {
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-white)] px-4 py-2.5 text-[var(--text-sm)] font-medium text-[var(--color-text)] hover:bg-[var(--color-gray-bg)] transition-colors">
             ⏱ Séance d'étude
           </button>
-          <button onClick={() => setShowAddSubject(true)}
-            className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[var(--text-sm)] font-semibold text-white hover:opacity-90 transition-opacity">
-            + Matière
-          </button>
+          {selectedType !== 'academic' && (
+            <button onClick={() => setShowAddSubject(true)}
+              className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[var(--text-sm)] font-semibold text-white hover:opacity-90 transition-opacity">
+              + Matière
+            </button>
+          )}
         </div>
       </div>
 
-      {showAddSubject && <AddSubjectModal onAdd={s => { createSubject(s); setShowAddSubject(false) }} onClose={() => setShowAddSubject(false)} />}
+      {showAddSubject && <AddSubjectModal isStudent={isStudent} onAdd={s => { createSubject(s); setShowAddSubject(false) }} onClose={() => setShowAddSubject(false)} />}
       {showLogSession && subjects.length > 0 && (
         <SessionLogger subjects={subjects} onLog={d => logSession({ ...d, notes: '' })} onClose={() => setShowLogSession(false)} />
       )}
@@ -223,12 +266,12 @@ export default function ProgressTrackerPage() {
 
       {/* Subject type filter */}
       <div className="flex items-center gap-2">
-        {(['all', 'academic', 'personal'] as const).map(t => (
+        {(['academic', 'personal'] as const).map(t => (
           <button key={t} onClick={() => setSelectedType(t)}
             className={`rounded-full px-4 py-1.5 text-[var(--text-xs)] font-medium transition-all ${
               selectedType === t ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-gray-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
             }`}>
-            {t === 'all' ? 'Toutes' : t === 'academic' ? '🎓 Académiques' : '🌱 Personnelles'}
+            {t === 'academic' ? '🎓 Académiques' : '🌱 Personnelles'}
           </button>
         ))}
         <span className="ml-auto text-[var(--text-xs)] text-[var(--color-text-secondary)]">{filtered.length} matière{filtered.length !== 1 ? 's' : ''}</span>
@@ -275,11 +318,13 @@ export default function ProgressTrackerPage() {
           })}
 
           {/* Add card */}
-          <button onClick={() => setShowAddSubject(true)}
-            className="rounded-2xl border-2 border-dashed border-[var(--color-border)] p-5 text-center text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all group">
-            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">+</div>
-            <div className="text-[var(--text-sm)] font-medium">Ajouter une matière</div>
-          </button>
+          {selectedType !== 'academic' && (
+            <button onClick={() => setShowAddSubject(true)}
+              className="rounded-2xl border-2 border-dashed border-[var(--color-border)] p-5 text-center text-[var(--color-text-secondary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all group">
+              <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">+</div>
+              <div className="text-[var(--text-sm)] font-medium">Ajouter une matière</div>
+            </button>
+          )}
         </div>
       )}
 

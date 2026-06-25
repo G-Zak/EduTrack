@@ -33,7 +33,8 @@ export const DEFAULT_PERSONAL_SUBJECTS: Subject[] = [
 function loadFromStorage(): Subject[] {
   const raw = localStorage.getItem(LS_KEY)
   if (raw) return JSON.parse(raw)
-  const defaults = [...DEFAULT_ACADEMIC_SUBJECTS, ...DEFAULT_PERSONAL_SUBJECTS]
+  // Default to only academic subjects, so personal starts empty
+  const defaults = DEFAULT_ACADEMIC_SUBJECTS
   localStorage.setItem(LS_KEY, JSON.stringify(defaults))
   return defaults
 }
@@ -51,8 +52,8 @@ export async function getSubjects(userId?: string, type?: SubjectType): Promise<
     const { data, error } = await query.order('name')
     if (!error && data) {
       if (data.length === 0) {
-        // Auto-seed default subjects in the database for this student
-        const defaults = [...DEFAULT_ACADEMIC_SUBJECTS, ...DEFAULT_PERSONAL_SUBJECTS]
+        // Auto-seed default subjects in the database for this student - ONLY academic subjects
+        const defaults = DEFAULT_ACADEMIC_SUBJECTS
         const toInsert = defaults.map(s => ({
           user_id: userId,
           name: s.name,
