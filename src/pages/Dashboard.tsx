@@ -338,10 +338,6 @@ function StudentDashboard() {
   const overdueCount = studentTasks.filter(t => t.status === 'overdue').length
   const pendingCount = studentTasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
 
-  const allLessons = modules.flatMap(m => m.chapters.flatMap(c => c.lessons))
-  const totalLessons = allLessons.length
-  const completedCount = progress.completedLessons.length
-  const globalPct = totalLessons ? Math.round((completedCount / totalLessons) * 100) : 0
 
   const MENTION =
     genAvg >= 18 ? 'Très Bien' :
@@ -464,42 +460,7 @@ function StudentDashboard() {
             )
           })}
         </div>
-      </div>
-
-      {/* Lesson progress */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
-        <div className="flex items-center gap-8 mb-6">
-          <RadialProgress value={globalPct} size={100} strokeWidth={8} label="cours" />
-          <div>
-            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Progression des cours</h2>
-            <p className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedCount}/{totalLessons} leçons complétées</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {modules.map(m => {
-            const ids = m.chapters.flatMap(c => c.lessons.map(l => l.id))
-            const done = ids.filter(id => isCompleted(id)).length
-            const pct = ids.length ? Math.round((done / ids.length) * 100) : 0
-            return (
-              <button
-                key={m.id}
-                onClick={() => navigate(`/modules?moduleId=${m.id}`)}
-                className="rounded-xl border border-[var(--color-border)] p-3 text-left hover:border-[var(--color-primary)] transition-colors"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: m.color }} />
-                  <span className="text-[var(--text-xs)] font-medium text-[var(--color-text)] truncate">{m.title}</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-gray-bg)]">
-                  <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: m.color }} />
-                </div>
-                <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{pct}%</div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
+      </div>    </div>
   )
 }
 
