@@ -4,18 +4,14 @@ import {
   grades as mockGrades, 
   absences as mockAbsences, 
   tasks as mockTasks, 
-  feedbacks as mockFeedbacks, 
   subjects as mockSubjects, 
-  modules, 
   profile, 
   mockGroups, 
   mockGroupStudents 
 } from '../data/mockData'
-import { useProgress } from '../context/ProgressContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getSubjects } from '../services/subjectService'
-import RadialProgress from '../components/shared/RadialProgress'
 
 // ─── Helpers for calculations ──────────────────────────────────────────────────
 
@@ -278,7 +274,6 @@ function TeacherDashboard() {
 function StudentDashboard() {
   const navigate = useNavigate()
   const { user, isConfigured } = useAuth()
-  const { progress, isCompleted } = useProgress()
 
   const [studentGrades, setStudentGrades] = useState<any[]>([])
   const [subjectsList, setSubjectsList] = useState<any[]>([])

@@ -9,7 +9,6 @@ import {
   mockGroupStudents 
 } from '../data/mockData'
 import { supabase } from '../lib/supabase'
-import { getSubjects } from '../services/subjectService'
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
