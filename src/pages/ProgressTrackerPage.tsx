@@ -68,7 +68,7 @@ function AddSubjectModal({ isStudent, onAdd, onClose }: { isStudent: boolean; on
         <div className="flex gap-3 justify-end pt-2">
           <button onClick={onClose} className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-[var(--text-sm)] text-[var(--color-text)] hover:bg-[var(--color-gray-bg)]">Annuler</button>
           <button
-            onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), color, type, ...(!isStudent && type === 'academic' ? { teacher, coefficient: coeff } : {}), isActive: true }); onClose() }}
+            onClick={() => { if (!name.trim()) return; onAdd({ name: name.trim(), color, type, ...(!isStudent && type === 'academic' ? { teacher, coefficient: coeff } : {}), is_active: true, user_id: 'default', created_at: new Date().toISOString() }); onClose() }}
             className="px-5 py-2 rounded-xl bg-[var(--color-primary)] text-white text-[var(--text-sm)] font-semibold hover:opacity-90">
             Ajouter
           </button>

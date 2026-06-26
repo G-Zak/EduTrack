@@ -205,7 +205,7 @@ export default function AbsencesPage() {
           reason: s.reason || undefined,
           excused: s.excused,
           certificateProvided: s.excused,
-          subjectId: formSubjectId || undefined,
+          subject_id: formSubjectId || undefined,
         }
 
         const studentAbs = localStorage.getItem(`student_absences_${s.studentId}`)
@@ -472,7 +472,7 @@ export default function AbsencesPage() {
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {sorted.map(a => {
-                    const subj = subjectsList.find(s => s.id === a.subjectId)
+                    const subj = subjectsList.find(s => s.id === a.subject_id)
                     return (
                       <tr key={a.id} className="hover:bg-[var(--color-gray-bg)] transition-colors">
                         <td className="px-6 py-3 whitespace-nowrap text-[var(--color-text-secondary)]">

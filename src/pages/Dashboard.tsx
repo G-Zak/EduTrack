@@ -4,18 +4,16 @@ import {
   grades as mockGrades, 
   absences as mockAbsences, 
   tasks as mockTasks, 
-  feedbacks as mockFeedbacks, 
   subjects as mockSubjects, 
-  modules, 
   profile, 
   mockGroups, 
   mockGroupStudents 
 } from '../data/mockData'
-import { useProgress } from '../context/ProgressContext'
+
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getSubjects } from '../services/subjectService'
-import RadialProgress from '../components/shared/RadialProgress'
+
 
 // ─── Helpers for calculations ──────────────────────────────────────────────────
 
@@ -127,7 +125,7 @@ function TeacherDashboard() {
       const fallbackTasks = mockTasks.filter(t => (t as any).createdBy === 'teacher' || (t as any).created_by === 'teacher')
       setAssignedTasks(fallbackTasks)
       setPendingReview(fallbackTasks.filter(t => t.status === 'submitted').length)
-      setCompletedAssigned(fallbackTasks.filter(t => t.status === 'completed' || t.status === 'graded').length)
+      setCompletedAssigned(fallbackTasks.filter(t => t.status === 'graded').length)
 
       setTotalGrades(mockGrades.length)
       setExcellent(mockGrades.filter(g => g.value >= 16).length)
@@ -278,7 +276,6 @@ function TeacherDashboard() {
 function StudentDashboard() {
   const navigate = useNavigate()
   const { user, isConfigured } = useAuth()
-  const { progress, isCompleted } = useProgress()
 
   const [studentGrades, setStudentGrades] = useState<any[]>([])
   const [subjectsList, setSubjectsList] = useState<any[]>([])

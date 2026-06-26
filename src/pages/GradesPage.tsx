@@ -28,8 +28,8 @@ function gradeColor(v: number) {
   return 'text-red-500'
 }
 
-function getSubjectAverage(gradesList: Grade[], subjectId: string) {
-  const sg = gradesList.filter(g => g.subjectId === subjectId)
+function getSubjectAverage(gradesList: Grade[], subject_id: string) {
+  const sg = gradesList.filter(g => g.subject_id === subject_id)
   if (!sg.length) return 0
   const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
   const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
@@ -192,7 +192,7 @@ export default function GradesPage() {
         const mapped: Grade[] = data.map(g => ({
           id: g.id,
           studentId: g.user_id,
-          subjectId: g.subject_id,
+          subject_id: g.subject_id,
           title: g.title,
           value: g.value,
           weight: g.weight,
@@ -245,7 +245,7 @@ export default function GradesPage() {
     const newGrade: Grade = {
       id: `grade-${Date.now()}`,
       studentId: selectedStudentId,
-      subjectId: formSubjectId,
+      subject_id: formSubjectId,
       title: calculatedTitle,
       value: valueNum,
       weight: isNaN(weightNum) ? 1 : weightNum,
@@ -294,7 +294,7 @@ export default function GradesPage() {
 
   const filtered = filterSubject === 'all'
     ? localGrades
-    : localGrades.filter(g => g.subjectId === filterSubject)
+    : localGrades.filter(g => g.subject_id === filterSubject)
 
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
   const chartData = buildChartData(localGrades)
@@ -551,7 +551,7 @@ export default function GradesPage() {
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {sorted.map(g => {
-                    const subj = subjectsList.find(s => s.id === g.subjectId)
+                    const subj = subjectsList.find(s => s.id === g.subject_id)
                     return (
                       <tr key={g.id} className="hover:bg-[var(--color-gray-bg)] transition-colors">
                         <td className="px-6 py-3 text-[var(--color-text-secondary)] whitespace-nowrap">

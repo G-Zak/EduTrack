@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import logoLight from '../assets/logoedutrack.png'
-import teamAvatar from '../assets/team-avatar.png'
 import './LandingPage.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
