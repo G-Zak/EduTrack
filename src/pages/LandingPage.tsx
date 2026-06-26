@@ -104,7 +104,7 @@ const pricingPlans: PricingPlan[] = [
   },
   {
     name: 'Institution',
-    price: '599',
+    price: '6000',
     period: 'par mois',
     description: 'Pour les écoles et universités gérant des cohortes d\'étudiants.',
     features: [
