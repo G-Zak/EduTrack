@@ -30,3 +30,9 @@ dist-ssr
 .env
 docs/
 documentation/
+
+# Unnecessary project assets and temporary files
+context.md
+src/assets/logoedutrack copy.png
+src/assets/EDUUTRACK 2.png
+src/assets/edutrack WV.png

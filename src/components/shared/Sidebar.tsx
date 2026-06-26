@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 
 const links = [
   {
-    to: '/',
+    to: '/app',
     label: 'Tableau de bord',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12,7 +12,7 @@ const links = [
     ),
   },
   {
-    to: '/notes',
+    to: '/app/notes',
     label: 'Notes',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@ const links = [
     ),
   },
   {
-    to: '/absences',
+    to: '/app/absences',
     label: 'Absences',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +30,7 @@ const links = [
     ),
   },
   {
-    to: '/taches',
+    to: '/app/taches',
     label: 'Tâches',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@ const links = [
   },
 
   {
-    to: '/analytics',
+    to: '/app/analytics',
     label: 'Analytics',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ const links = [
 
 const progressLinks = [
   {
-    to: '/progression',
+    to: '/app/progression',
     label: 'Progression',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ const progressLinks = [
     ),
   },
   {
-    to: '/reflexion',
+    to: '/app/reflexion',
     label: 'Auto-évaluation',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@ const progressLinks = [
     ),
   },
   {
-    to: '/modules',
+    to: '/app/modules',
     label: 'Apprentissage',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@ const progressLinks = [
     ),
   },
   {
-    to: '/profil',
+    to: '/app/profil',
     label: 'Mon profil',
     icon: (
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,12 +105,12 @@ export default function Sidebar() {
     .toUpperCase() || (isTeacher ? 'EN' : 'ET')
 
   const visibleLinks = links.filter(link => {
-    if (isTeacher && (link.to === '/avis' || link.to === '/analytics')) return false
+    if (isTeacher && (link.to === '/app/avis' || link.to === '/app/analytics')) return false
     return true
   })
 
   const visibleProgressLinks = progressLinks.filter(link => {
-    if (isTeacher && (link.to === '/progression' || link.to === '/reflexion' || link.to === '/modules')) return false
+    if (isTeacher && (link.to === '/app/progression' || link.to === '/app/reflexion' || link.to === '/app/modules')) return false
     return true
   })
 
@@ -129,7 +129,7 @@ export default function Sidebar() {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={to === '/app'}
             className={({ isActive }) =>
               `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[var(--text-xs)] font-medium transition-all ${
                 isActive

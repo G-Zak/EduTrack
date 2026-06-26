@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Sidebar from './components/shared/Sidebar'
+import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import Profil from './pages/Profil'
@@ -77,8 +78,9 @@ export default function App() {
     <AuthProvider>
       <ProgressProvider>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginRedirect />} />
-          <Route path="/*" element={<ProtectedLayout />} />
+          <Route path="/app/*" element={<ProtectedLayout />} />
         </Routes>
       </ProgressProvider>
     </AuthProvider>
@@ -88,6 +90,6 @@ export default function App() {
 function LoginRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="text-[var(--color-text-secondary)]">Chargement...</div></div>
-  if (user) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/app" replace />
   return <AuthForm />
 }
