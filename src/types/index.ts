@@ -34,8 +34,6 @@ export interface Profile {
   email: string
 }
 
-export type UserProfile = Profile
-
 export interface ProgressState {
   completedLessons: string[]
   completedChapters?: string[]
@@ -65,15 +63,14 @@ export type SubjectRow = Database['public']['Tables']['subjects']['Row']
 
 export interface Subject {
   id: string
-  user_id?: string
+  user_id: string
   name: string
   color: string
   type: SubjectType
   coefficient?: number
   teacher?: string
-  is_active?: boolean
-  isActive?: boolean
-  created_at?: string
+  is_active: boolean
+  created_at: string
   chapters?: SubjectChapter[]
 }
 
@@ -82,8 +79,7 @@ export type GradeRow = Database['public']['Tables']['grades']['Row']
 export interface Grade {
   id: string
   studentId: string
-  subject_id?: string
-  subjectId?: string
+  subject_id: string
   title: string
   value: number
   weight: number
@@ -103,10 +99,9 @@ export interface Absence {
   excused: boolean
   certificateProvided: boolean
   subject_id?: string
-  subjectId?: string
 }
 
-export type TaskStatus = 'pending' | 'in_progress' | 'submitted' | 'graded' | 'overdue' | 'completed'
+export type TaskStatus = 'pending' | 'in_progress' | 'submitted' | 'graded' | 'overdue'
 
 export type TaskRow = Database['public']['Tables']['tasks']['Row']
 
@@ -116,8 +111,7 @@ export interface Task {
   title: string
   description: string
   dueDate: string
-  subject_ids?: string[]
-  subjectId?: string
+  subject_ids: string[]
   status: TaskStatus
   grade?: number
   submittedDate?: string
